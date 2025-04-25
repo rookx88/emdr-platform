@@ -1,8 +1,11 @@
+// packages/backend/src/server.ts
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
+import { errorHandler } from './middlewares/errorHandler';
+import authRoutes from './routes/authRoutes';
 
 // Load environment variables
 dotenv.config({ 
@@ -36,26 +39,16 @@ if (process.env.ENABLE_RATE_LIMITING === 'true') {
 // Parse JSON body
 app.use(express.json({ limit: '1mb' }));
 
+// Routes
+app.use('/api/auth', authRoutes);
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'healthy' });
 });
 
 // Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(`[${new Date().toISOString()}] ${err.stack}`);
-  
-  const statusCode = err.statusCode || 500;
-  const message = process.env.NODE_ENV === 'production' && statusCode === 500
-    ? 'Internal server error'
-    : err.message;
-    
-  res.status(statusCode).json({
-    status: 'error',
-    message,
-    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
-  });
-});
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
