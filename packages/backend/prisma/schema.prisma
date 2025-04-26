@@ -1,3 +1,4 @@
+// Enhanced Prisma schema for EMDR platform with HIPAA compliance
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,139 +8,400 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Enhanced schema.prisma
 model User {
-  id            String      @id @default(uuid())
-  email         String      @unique
-  passwordHash  String
-  firstName     String?
-  lastName      String?
-  role          Role        @default(CLIENT)
-  isActive      Boolean     @default(true)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  lastLoginAt   DateTime?
+  id                 String               @id @default(uuid())
+  email              String               @unique
+  passwordHash       String
+  firstName          String?
+  lastName           String?
+  role               Role                 @default(CLIENT)
+  isActive           Boolean              @default(true)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  lastLoginAt        DateTime?
   
-  // Relationships
-  therapistProfile  TherapistProfile?
-  clientProfile     ClientProfile?
-  sessions          Session[]          @relation("SessionParticipant")
-  createdSessions   Session[]          @relation("SessionCreator")
-  notes             Note[]             @relation("NoteAuthor")
-  clientNotes       Note[]             @relation("NoteSubject")
+  // HIPAA compliance fields
+  lockedReason       String?
+  lockedAt           DateTime?
+  lastFailedLogin    DateTime?
+  failedLoginAttempts Int                 @default(0)
+  twoFactorEnabled   Boolean              @default(false)
+  twoFactorSecret    String?
+  
+  // Relations to existing entities
+  clientProfile      ClientProfile?
+  therapistProfile   TherapistProfile?
+  sessions           SessionParticipant[]
+  notes              Note[]
+  sentMessages       Message[]            @relation("MessageSender")
+  receivedMessages   Message[]            @relation("MessageReceiver")
+  documents          Document[]
+  notifications      Notification[]
+  
+  // Relations to new HIPAA compliance entities
+  passwordHistory    PasswordHistory[]
+  auditLogs          AuditLog[]
+  tokenBlacklist     TokenBlacklist[]
+  userActivity       UserActivity[]
+  loggedErrors       ErrorLog[]           @relation("UserErrors")
   
   @@index([email])
 }
 
-model TherapistProfile {
-  id              String    @id @default(uuid())
-  userId          String    @unique
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  professionalId  String?   @unique // License number
-  specialties     String[]
-  bio             String?   @db.Text
-  availableHours  Json?     // Structured JSON for availability schedule
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  // Relationships
-  clients         ClientTherapist[]
-}
-
 model ClientProfile {
-  id              String    @id @default(uuid())
-  userId          String    @unique
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  dateOfBirth     DateTime?
-  emergencyContact String?
-  preferredContactMethod String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                 String               @id @default(uuid())
+  userId             String               @unique
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth        DateTime?
+  phoneNumber        String?
+  address            String?
+  emergencyContact   String?
+  emergencyPhone     String?
+  insuranceInfo      String?
+  consentFormSigned  Boolean              @default(false)
+  therapistId        String?
+  therapistProfile   TherapistProfile?    @relation(fields: [therapistId], references: [id])
+  assessments        Assessment[]
+  treatmentPlan      TreatmentPlan?
   
-  // Relationships
-  therapists      ClientTherapist[]
+  @@index([therapistId])
 }
 
-model ClientTherapist {
-  id            String    @id @default(uuid())
-  clientId      String
-  therapistId   String
-  startDate     DateTime  @default(now())
-  endDate       DateTime?
-  status        String    @default("ACTIVE") // ACTIVE, PAUSED, TERMINATED
+model TherapistProfile {
+  id                 String               @id @default(uuid())
+  userId             String               @unique
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  licenseNumber      String?
+  licenseState       String?
+  specialties        String[]
+  bio                String?
+  availability       Json?                // JSON structure for weekly availability
+  clients            ClientProfile[]
   
-  // Relationships
-  client        ClientProfile     @relation(fields: [clientId], references: [id])
-  therapist     TherapistProfile  @relation(fields: [therapistId], references: [id])
-  
-  @@unique([clientId, therapistId])
+  @@index([licenseNumber])
 }
 
 model Session {
-  id            String    @id @default(uuid())
-  title         String
-  scheduledStart DateTime
-  scheduledEnd  DateTime
-  actualStart   DateTime?
-  actualEnd     DateTime?
-  status        String    @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
-  sessionType   String    @default("EMDR") // EMDR, CONSULTATION, INTAKE
-  creatorId     String
-  notes         String?   @db.Text
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                 String               @id @default(uuid())
+  title              String?
+  scheduledAt        DateTime
+  endedAt            DateTime?
+  duration           Int?                 // Duration in minutes
+  notes              String?
+  recordingUrl       String?
+  status             SessionStatus        @default(SCHEDULED)
+  sessionType        SessionType          @default(STANDARD)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  participants       SessionParticipant[]
+  emdrSettings       EmdrSessionSettings?
+  assessments        Assessment[]
+}
+
+model SessionParticipant {
+  id                 String               @id @default(uuid())
+  sessionId          String
+  session            Session              @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId             String
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role               SessionRole          @default(PARTICIPANT)
+  joinedAt           DateTime?
+  leftAt             DateTime?
   
-  // Relationships
-  creator       User      @relation("SessionCreator", fields: [creatorId], references: [id])
-  participants  User[]    @relation("SessionParticipant")
-  emdrSettings  EmdrSessionSettings?
-  recordings    Recording[]
+  @@unique([sessionId, userId])
+  @@index([sessionId])
+  @@index([userId])
 }
 
 model EmdrSessionSettings {
-  id            String    @id @default(uuid())
-  sessionId     String    @unique
-  session       Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  visualType    String    @default("HORIZONTAL") // HORIZONTAL, VERTICAL, OTHER
-  speed         Int       @default(30) // Movements per minute
-  movementWidth Int       @default(700) // Pixels
-  soundEnabled  Boolean   @default(false)
-  hapticEnabled Boolean   @default(false)
-  customSettings Json?    // For additional configurable parameters
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-}
-
-model Recording {
-  id            String    @id @default(uuid())
-  sessionId     String
-  session       Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  storageUrl    String    // S3 or other storage URL (encrypted)
-  contentType   String    // video/webm, audio/mp3, etc.
-  durationSec   Int
-  createdAt     DateTime  @default(now())
+  id                 String               @id @default(uuid())
+  sessionId          String               @unique
+  session            Session              @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  bilateralType      BilateralType        @default(VISUAL)
+  speed              Int                  @default(20)     // Speed of movement/sound
+  direction          Direction            @default(HORIZONTAL)
+  customSettings     Json?                // Any additional customization
   
   @@index([sessionId])
 }
 
 model Note {
-  id            String    @id @default(uuid())
-  authorId      String
-  author        User      @relation("NoteAuthor", fields: [authorId], references: [id])
-  subjectId     String?
-  subject       User?     @relation("NoteSubject", fields: [subjectId], references: [id])
-  content       String    @db.Text
-  noteType      String    // SESSION_NOTE, PROGRESS_NOTE, TREATMENT_PLAN
-  isEncrypted   Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                 String               @id @default(uuid())
+  content            String
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  authorId           String
+  author             User                 @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  clientId           String?
+  isPrivate          Boolean              @default(false)  // If true, only author can see
+  isEncrypted        Boolean              @default(true)   // HIPAA: Ensure sensitive notes are encrypted
   
   @@index([authorId])
-  @@index([subjectId])
+  @@index([clientId])
 }
 
+model Assessment {
+  id                 String               @id @default(uuid())
+  title              String
+  type               AssessmentType
+  data               Json                 // Assessment data in JSON format
+  score              Float?
+  completedAt        DateTime?
+  clientId           String
+  client             ClientProfile        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  sessionId          String?
+  session            Session?             @relation(fields: [sessionId], references: [id])
+  createdAt          DateTime             @default(now())
+  
+  @@index([clientId])
+  @@index([sessionId])
+}
+
+model TreatmentPlan {
+  id                 String               @id @default(uuid())
+  clientId           String               @unique
+  client             ClientProfile        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  goals              Json[]               // Array of treatment goals
+  interventions      String[]             // Planned interventions
+  startDate          DateTime             @default(now())
+  targetEndDate      DateTime?
+  status             TreatmentStatus      @default(ACTIVE)
+  notes              String?
+  updatedAt          DateTime             @updatedAt
+  
+  @@index([clientId])
+}
+
+model Document {
+  id                 String               @id @default(uuid())
+  name               String
+  contentType        String
+  size               Int
+  url                String
+  uploadedAt         DateTime             @default(now())
+  uploaderId         String
+  uploader           User                 @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+  isPublic           Boolean              @default(false)
+  isEncrypted        Boolean              @default(true)   // HIPAA: Ensure PHI documents are encrypted
+  
+  @@index([uploaderId])
+}
+
+model Message {
+  id                 String               @id @default(uuid())
+  content            String
+  senderId           String
+  sender             User                 @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId         String
+  receiver           User                 @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  sentAt             DateTime             @default(now())
+  readAt             DateTime?
+  isEncrypted        Boolean              @default(true)   // HIPAA: Ensure messages are encrypted
+  
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+model Notification {
+  id                 String               @id @default(uuid())
+  userId             String
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type               NotificationType
+  title              String
+  message            String
+  isRead             Boolean              @default(false)
+  createdAt          DateTime             @default(now())
+  
+  @@index([userId])
+}
+
+// HIPAA Compliance Models
+
+model PasswordHistory {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passwordHash  String
+  createdAt     DateTime  @default(now())
+  
+  @@index([userId])
+}
+
+model AuditLog {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  action        String    // CREATE, READ, UPDATE, DELETE, LOGIN, LOGOUT, etc.
+  resourceType  String    // User, Session, Note, etc.
+  resourceId    String
+  ipAddress     String
+  userAgent     String
+  details       String?   @db.Text
+  timestamp     DateTime
+  
+  @@index([userId])
+  @@index([timestamp])
+  @@index([resourceType, resourceId])
+}
+
+model LoginAttempt {
+  id            String    @id @default(uuid())
+  email         String
+  ipAddress     String
+  successful    Boolean
+  timestamp     DateTime  @default(now())
+  
+  @@index([email])
+  @@index([ipAddress])
+  @@index([timestamp])
+}
+
+model TokenBlacklist {
+  id          String    @id @default(uuid())
+  token       String    @unique
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  reason      String?   // Reason for blacklisting (logout, password change, etc.)
+  
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model UserActivity {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  ipAddress   String
+  userAgent   String
+  endpoint    String
+  method      String
+  timestamp   DateTime
+  
+  @@index([userId])
+  @@index([timestamp])
+}
+
+model ErrorLog {
+  id            String    @id @default(uuid())
+  errorId       String    @unique
+  message       String
+  stack         String?   @db.Text
+  statusCode    Int
+  isOperational Boolean
+  userId        String?
+  user          User?     @relation("UserErrors", fields: [userId], references: [id])
+  ipAddress     String
+  userAgent     String
+  endpoint      String
+  method        String
+  requestBody   String?   @db.Text
+  requestQuery  String?   @db.Text
+  timestamp     DateTime
+  
+  @@index([errorId])
+  @@index([timestamp])
+  @@index([userId])
+}
+
+model SecurityConfiguration {
+  id                  String    @id @default(uuid())
+  passwordMinLength   Int       @default(12)
+  passwordRequireUpper Boolean   @default(true)
+  passwordRequireLower Boolean   @default(true)
+  passwordRequireNumber Boolean  @default(true)
+  passwordRequireSpecial Boolean @default(true)
+  passwordHistoryCount Int      @default(5)
+  accountLockoutThreshold Int    @default(5)
+  accountLockoutDuration Int     @default(30) // minutes
+  sessionTimeout       Int       @default(30) // minutes
+  updatedAt           DateTime  @updatedAt
+  updatedBy           String?
+}
+
+model DataAccessLog {
+  id            String    @id @default(uuid())
+  userId        String
+  accessedData  String    // What data was accessed
+  purpose       String    // Why it was accessed
+  timestamp     DateTime  @default(now())
+  ipAddress     String
+  
+  @@index([userId])
+  @@index([timestamp])
+}
+
+model BusinessAssociateAgreement {
+  id            String    @id @default(uuid())
+  companyName   String
+  contactName   String
+  contactEmail  String
+  agreementText String    @db.Text
+  signedAt      DateTime?
+  expiresAt     DateTime?
+  status        String    @default("PENDING") // PENDING, ACTIVE, EXPIRED
+  createdAt     DateTime  @default(now())
+  
+  @@index([status])
+}
+
+// Enums
 enum Role {
   ADMIN
   THERAPIST
   CLIENT
+}
+
+enum SessionStatus {
+  SCHEDULED
+  CANCELED
+  STARTED
+  COMPLETED
+}
+
+enum SessionType {
+  STANDARD
+  EMDR
+  ASSESSMENT
+  INTAKE
+}
+
+enum SessionRole {
+  HOST
+  PARTICIPANT
+  OBSERVER
+}
+
+enum BilateralType {
+  VISUAL
+  AUDIO
+  HAPTIC
+}
+
+enum Direction {
+  HORIZONTAL
+  VERTICAL
+  DIAGONAL
+}
+
+enum AssessmentType {
+  SUDS
+  VOC
+  INITIAL_ASSESSMENT
+  PROGRESS_ASSESSMENT
+  DISCHARGE_ASSESSMENT
+}
+
+enum TreatmentStatus {
+  ACTIVE
+  COMPLETED
+  DISCONTINUED
+}
+
+enum NotificationType {
+  APPOINTMENT
+  REMINDER
+  SYSTEM
+  MESSAGE
 }
