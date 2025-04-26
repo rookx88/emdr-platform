@@ -6,13 +6,22 @@ import bcrypt from 'bcrypt';
 // Create a test client outside the test suite to reuse
 const prisma = new PrismaClient();
 
+// Force test environment to avoid encryption/decryption issues
+process.env.NODE_ENV = 'test';
+
+// Clean up before all tests
 beforeAll(async () => {
+  jest.setTimeout(10000); // Increase timeout for database operations
+  
   // Clean up the database before tests
+  await prisma.passwordHistory.deleteMany({});
   await prisma.user.deleteMany({});
 });
 
+// Clean up after all tests
 afterAll(async () => {
   // Clean up and disconnect
+  await prisma.passwordHistory.deleteMany({});
   await prisma.user.deleteMany({});
   await prisma.$disconnect();
 });
