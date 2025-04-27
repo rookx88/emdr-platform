@@ -1,10 +1,9 @@
-// Enhanced authController.ts
-
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { userService } from '../services/userService';
 import { prisma } from '../lib/prisma';
+import crypto from 'crypto';
 
 // Maximum failed login attempts before account lockout
 const MAX_FAILED_ATTEMPTS = 5;
@@ -43,7 +42,7 @@ export const authController = {
           action: 'REGISTER',
           resourceType: 'User',
           resourceId: user.id,
-          ipAddress: req.ip,
+          ipAddress: req.ip || '0.0.0.0',
           userAgent: req.headers['user-agent'] || 'Unknown',
           timestamp: new Date()
         }
@@ -63,7 +62,7 @@ export const authController = {
       const loginAttempt = await prisma.loginAttempt.create({
         data: {
           email,
-          ipAddress: req.ip,
+          ipAddress: req.ip || '0.0.0.0',
           successful: false, // Default to false, update if successful
           timestamp: new Date()
         }
@@ -151,13 +150,17 @@ export const authController = {
         sessionId: crypto.randomUUID()
       };
       
+      // Define the JWT expiry with proper typing
       const jwtExpiry = process.env.JWT_EXPIRY || '24h';
+      const options: SignOptions = { 
+        expiresIn: jwtExpiry as jwt.SignOptions['expiresIn']
+      };
       
-      // Generate JWT
+      // Generate JWT with correctly typed parameters
       const token = jwt.sign(
         payload,
-        jwtSecret,
-        { expiresIn: jwtExpiry }
+        Buffer.from(jwtSecret, 'utf-8'),
+        options
       );
       
       // Log successful login
@@ -167,7 +170,7 @@ export const authController = {
           action: 'LOGIN',
           resourceType: 'User',
           resourceId: user.id,
-          ipAddress: req.ip,
+          ipAddress: req.ip || '0.0.0.0',
           userAgent: req.headers['user-agent'] || 'Unknown',
           timestamp: new Date()
         }
@@ -203,7 +206,7 @@ export const authController = {
             action: 'LOGOUT',
             resourceType: 'User',
             resourceId: req.user.userId,
-            ipAddress: req.ip,
+            ipAddress: req.ip || '0.0.0.0',
             userAgent: req.headers['user-agent'] || 'Unknown',
             timestamp: new Date()
           }

@@ -1,7 +1,23 @@
-// HIPAA-compliant error handler
-
+// packages/backend/src/middlewares/errorHandler.ts
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../lib/prisma';
+
+// Add interface for TokenPayload
+interface TokenPayload {
+  userId: string;
+  email: string;
+  role: string;
+  sessionId?: string;
+}
+
+// Declare the global extension to Express.Request
+declare global {
+  namespace Express {
+    interface Request {
+      user?: TokenPayload;
+    }
+  }
+}
 
 export interface AppError extends Error {
   statusCode?: number;
@@ -32,8 +48,8 @@ export const errorHandler = async (
         stack: err.stack,
         statusCode,
         isOperational,
-        userId: req.user?.userId,
-        ipAddress: req.ip,
+        userId: req.user?.userId || 'Unknown', 
+        ipAddress: req.ip || '0.0.0.0',
         userAgent: req.headers['user-agent'] || 'Unknown',
         endpoint: req.originalUrl,
         method: req.method,

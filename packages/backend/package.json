@@ -4,7 +4,7 @@
   "description": "EMDR Platform Backend API",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "nodemon --exec ts-node server.ts",
+    "dev": "ts-node src/server.ts",
     "start": "node dist/server.js",
     "build": "tsc",
     "test": "jest",
