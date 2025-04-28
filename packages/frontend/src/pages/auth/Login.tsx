@@ -1,16 +1,25 @@
 // src/pages/auth/Login.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 
 const Login: React.FC = () => {
+  // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
+  // Validation state
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [formTouched, setFormTouched] = useState(false);
+  
+  // Component state
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
+  // Hooks
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -18,20 +27,103 @@ const Login: React.FC = () => {
   // Get the redirect path from location state or default to '/'
   const from = (location.state as any)?.from?.pathname || '/';
   
+  // URL query parameters
+  const queryParams = new URLSearchParams(location.search);
+  const redirectParam = queryParams.get('redirect');
+  const sessionExpired = queryParams.get('expired') === 'true';
+  
+  // Set error message if session expired
+  useEffect(() => {
+    if (sessionExpired) {
+      setError('Your session has expired. Please log in again.');
+    }
+  }, [sessionExpired]);
+  
+  // Email validation
+  const validateEmail = (): boolean => {
+    // Clear previous error
+    setEmailError('');
+    
+    // Basic validation
+    if (!email.trim()) {
+      setEmailError('Email is required');
+      return false;
+    }
+    
+    // Format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email address');
+      return false;
+    }
+    
+    return true;
+  };
+  
+  // Password validation
+  const validatePassword = (): boolean => {
+    // Clear previous error
+    setPasswordError('');
+    
+    // Basic validation
+    if (!password) {
+      setPasswordError('Password is required');
+      return false;
+    }
+    
+    return true;
+  };
+  
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Clear existing errors
     setError('');
+    setEmailError('');
+    setPasswordError('');
+    
+    // Set form as touched
+    setFormTouched(true);
+    
+    // Validate all fields
+    const isEmailValid = validateEmail();
+    const isPasswordValid = validatePassword();
+    
+    // Stop if validation fails
+    if (!isEmailValid || !isPasswordValid) {
+      return;
+    }
+    
     setLoading(true);
     
     try {
       await login(email, password);
-      // Redirect to the page they tried to access or dashboard
-      navigate(from, { replace: true });
+      // Successful login - redirect to intended destination or dashboard
+      navigate(redirectParam || from, { replace: true });
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to log in');
+      // Handle specific authentication errors
+      if (err.response?.status === 401) {
+        setError('Invalid email or password');
+      } else if (err.response?.status === 403 && err.response?.data?.message?.includes('locked')) {
+        setError(err.response.data.message || 'Your account is locked. Please try again later.');
+      } else {
+        setError(err.response?.data?.message || 'Failed to log in');
+      }
     } finally {
       setLoading(false);
     }
+  };
+  
+  // Handle input changes
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    if (formTouched) validateEmail();
+  };
+  
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    if (formTouched) validatePassword();
   };
   
   return (
@@ -52,7 +144,7 @@ const Login: React.FC = () => {
             </p>
           </div>
           
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit} noValidate>
             {error && (
               <div className="rounded-md bg-red-50 p-4">
                 <div className="flex">
@@ -63,9 +155,9 @@ const Login: React.FC = () => {
               </div>
             )}
             
-            <div className="rounded-md shadow-sm -space-y-px">
+            <div className="rounded-md shadow-sm space-y-4">
               <div>
-                <label htmlFor="email-address" className="sr-only">
+                <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">
                   Email address
                 </label>
                 <input
@@ -75,13 +167,20 @@ const Login: React.FC = () => {
                   autoComplete="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  onChange={handleEmailChange}
+                  onBlur={validateEmail}
+                  className={`appearance-none relative block w-full px-3 py-2 border ${
+                    emailError ? 'border-red-500' : 'border-gray-300'
+                  } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                   placeholder="Email address"
                 />
+                {emailError && (
+                  <p className="mt-1 text-sm text-red-600">{emailError}</p>
+                )}
               </div>
+              
               <div>
-                <label htmlFor="password" className="sr-only">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                   Password
                 </label>
                 <input
@@ -91,14 +190,32 @@ const Login: React.FC = () => {
                   autoComplete="current-password"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  onChange={handlePasswordChange}
+                  onBlur={validatePassword}
+                  className={`appearance-none relative block w-full px-3 py-2 border ${
+                    passwordError ? 'border-red-500' : 'border-gray-300'
+                  } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                   placeholder="Password"
                 />
+                {passwordError && (
+                  <p className="mt-1 text-sm text-red-600">{passwordError}</p>
+                )}
               </div>
             </div>
 
             <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                  Remember me
+                </label>
+              </div>
+              
               <div className="text-sm">
                 <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
                   Forgot your password?
@@ -114,10 +231,35 @@ const Login: React.FC = () => {
                   loading ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
               >
-                {loading ? 'Signing in...' : 'Sign in'}
+                {loading ? (
+                  <>
+                    <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </span>
+                    Signing in...
+                  </>
+                ) : (
+                  'Sign in'
+                )}
               </button>
             </div>
           </form>
+          
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-600">
+              By signing in, you agree to our{' '}
+              <Link to="/terms" className="font-medium text-indigo-600 hover:text-indigo-500">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link to="/privacy" className="font-medium text-indigo-600 hover:text-indigo-500">
+                Privacy Policy
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
       

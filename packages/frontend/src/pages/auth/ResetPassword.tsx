@@ -1,6 +1,6 @@
 // src/pages/auth/ResetPassword.tsx
 import React, { useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';  

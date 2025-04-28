@@ -4,24 +4,11 @@ import { Request, Response, NextFunction } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { userService } from '../services/userService';
 import { PrismaClient } from '@prisma/client';
+import { TokenPayload } from '../types/express';
 
 // Ensure we're using a fresh instance of the Prisma client with all models
 const prisma = new PrismaClient();
 
-interface TokenPayload extends JwtPayload {
-  userId: string;
-  email: string;
-  role: string;
-  sessionId?: string;
-}
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: TokenPayload;
-    }
-  }
-}
 
 // Session timeout in minutes - defaults to 30 mins of inactivity
 const SESSION_TIMEOUT = parseInt(process.env.SESSION_TIMEOUT || '30', 10);

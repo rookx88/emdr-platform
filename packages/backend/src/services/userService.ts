@@ -62,14 +62,17 @@ const validatePassword = (password: string): { valid: boolean; message: string }
 
 // Function to encrypt sensitive data
 const encryptData = (text: string): string => {
-  // Skip encryption in test environment
-  if (process.env.NODE_ENV === 'test') {
+  // Skip encryption in test or development environment for now
+  if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
     return text;
   }
   
   try {
     const algorithm = 'aes-256-cbc';
-    const key = Buffer.from(process.env.DATABASE_ENCRYPTION_KEY || 'test-encryption-key-for-development', 'base64');
+    // The key needs to be exactly 32 bytes for AES-256
+    const keyString = process.env.DATABASE_ENCRYPTION_KEY || 'default-key-for-development-32bytes';
+    // Ensure the key is 32 bytes by hashing it if necessary
+    const key = crypto.createHash('sha256').update(keyString).digest();
     const iv = crypto.randomBytes(16);
     
     const cipher = crypto.createCipheriv(algorithm, key, iv);
@@ -79,21 +82,23 @@ const encryptData = (text: string): string => {
     return `${iv.toString('hex')}:${encrypted}`;
   } catch (error) {
     console.error('Encryption error:', error);
-    // Return plain text in case of error (for tests to pass)
+    // Return plain text in case of error (for development)
     return text;
   }
 };
 
 // Function to decrypt sensitive data
 const decryptData = (encryptedText: string): string => {
-  // Skip decryption in test environment or if not encrypted
-  if (process.env.NODE_ENV === 'test' || !encryptedText.includes(':')) {
+  // Skip decryption in test or development environment or if not encrypted
+  if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development' || !encryptedText.includes(':')) {
     return encryptedText;
   }
   
   try {
     const algorithm = 'aes-256-cbc';
-    const key = Buffer.from(process.env.DATABASE_ENCRYPTION_KEY || 'test-encryption-key-for-development', 'base64');
+    const keyString = process.env.DATABASE_ENCRYPTION_KEY || 'default-key-for-development-32bytes';
+    // Ensure the key is 32 bytes by hashing it if necessary
+    const key = crypto.createHash('sha256').update(keyString).digest();
     
     const parts = encryptedText.split(':');
     const iv = Buffer.from(parts[0], 'hex');
@@ -106,7 +111,7 @@ const decryptData = (encryptedText: string): string => {
     return decrypted;
   } catch (error) {
     console.error('Decryption error:', error);
-    // Return original text in case of error (for tests to pass)
+    // Return original text in case of error (for development)
     return encryptedText;
   }
 };

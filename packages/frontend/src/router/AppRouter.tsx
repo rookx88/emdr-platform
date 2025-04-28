@@ -19,9 +19,12 @@ import ClientDashboard from '../pages/client/Dashboard';
 import NotFound from '../pages/NotFound';
 import Unauthorized from '../pages/Unauthorized';
 
+import ErrorBoundary from '../components/common/ErrorBoundary';
+
 const AppRouter: React.FC = () => {
   return (
     <Router>
+      <ErrorBoundary>
       <AuthProvider>
         <Routes>
           {/* Public routes */}
@@ -60,6 +63,7 @@ const AppRouter: React.FC = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
+      </ErrorBoundary>
     </Router>
   );
 };

@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import { errorHandler } from './middlewares/errorHandler';
 import authRoutes from './routes/authRoutes';
+import userRoutes from './routes/userRoutes';
 
 // Load environment variables
 dotenv.config({ 
@@ -39,12 +40,23 @@ if (process.env.ENABLE_RATE_LIMITING === 'true') {
 // Parse JSON body
 app.use(express.json({ limit: '1mb' }));
 
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'healthy' });
+});
+
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - 404 - Route not found: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({ message: 'Endpoint not found' });
 });
 
 // Error handling middleware
