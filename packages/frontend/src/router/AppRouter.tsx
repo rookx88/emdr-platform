@@ -5,6 +5,8 @@ import { Role } from '../types';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import ProtectedRoute from './ProtectedRoute';
 
+import Landing from '../pages/Landing';
+
 // Auth pages
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
@@ -25,44 +27,46 @@ const AppRouter: React.FC = () => {
   return (
     <Router>
       <ErrorBoundary>
-      <AuthProvider>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/unauthorized" element={<Unauthorized />} />
-          
-          {/* Protected routes */}
-          <Route 
-            path="/therapist" 
-            element={
-              <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
-                <TherapistDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/client" 
-            element={
-              <ProtectedRoute allowedRoles={[Role.CLIENT]}>
-                <ClientDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Redirect based on role */}
-          <Route 
-            path="/" 
-            element={<RoleBasedRedirect />} 
-          />
-          
-          {/* 404 Not Found */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </AuthProvider>
+        <AuthProvider>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/unauthorized" element={<Unauthorized />} />
+
+            {/* Protected routes */}
+            <Route
+              path="/therapist"
+              element={
+                <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
+                  <TherapistDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/client"
+              element={
+                <ProtectedRoute allowedRoles={[Role.CLIENT]}>
+                  <ClientDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Remove or modify the role-based redirect since we now have a landing page */}
+            {/* The RoleBasedRedirect will only be used after login */}
+            <Route
+              path="/dashboard"
+              element={<RoleBasedRedirect />}
+            />
+
+            {/* 404 Not Found */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </ErrorBoundary>
     </Router>
   );
@@ -71,13 +75,13 @@ const AppRouter: React.FC = () => {
 // Helper component to redirect based on user role
 const RoleBasedRedirect: React.FC = () => {
   const { user, loading } = useAuth();
-  
+
   if (loading) return <div>Loading...</div>;
-  
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
-  
+
   switch (user.role) {
     case Role.ADMIN:
     case Role.THERAPIST:
