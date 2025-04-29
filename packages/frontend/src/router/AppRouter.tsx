@@ -1,4 +1,4 @@
-// src/router/AppRouter.tsx
+// packages/frontend/src/router/AppRouter.tsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Role } from '../types';
@@ -16,6 +16,9 @@ import ResetPassword from '../pages/auth/ResetPassword';
 // Dashboard pages
 import TherapistDashboard from '../pages/therapist/Dashboard';
 import ClientDashboard from '../pages/client/Dashboard';
+
+// Session pages
+import SessionPage from '../pages/therapist/SessionPage'; // Import the new SessionPage
 
 // Other pages
 import NotFound from '../pages/NotFound';
@@ -43,6 +46,16 @@ const AppRouter: React.FC = () => {
               element={
                 <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
                   <TherapistDashboard />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* New route for therapy sessions */}
+            <Route
+              path="/therapist/session/:sessionId"
+              element={
+                <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
+                  <SessionPage />
                 </ProtectedRoute>
               }
             />

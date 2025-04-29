@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit';
 import { errorHandler } from './middlewares/errorHandler';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
+import sessionRoutes from './routes/sessionRoutes'; // Add this line
 
 // Load environment variables
 dotenv.config({ 
@@ -27,6 +28,9 @@ app.use(cors({
   credentials: true,
 }));
 
+// Increase payload size limit for audio data
+app.use(express.json({ limit: '10mb' })); // Increased from 1mb to 10mb
+
 // Rate limiting for security
 if (process.env.ENABLE_RATE_LIMITING === 'true') {
   app.use(rateLimit({
@@ -37,9 +41,6 @@ if (process.env.ENABLE_RATE_LIMITING === 'true') {
   }));
 }
 
-// Parse JSON body
-app.use(express.json({ limit: '1mb' }));
-
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
   next();
@@ -48,6 +49,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/sessions', sessionRoutes); // Add this line
 
 // Health check endpoint
 app.get('/health', (req, res) => {
