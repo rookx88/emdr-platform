@@ -1,4 +1,4 @@
-// packages/frontend/src/components/therapist/BilateralStimulation.tsx
+// packages/frontend/src/components/therapist/BilateralSimulation.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useSession } from '../../context/SessionContext';
 
@@ -83,25 +83,13 @@ const BilateralStimulation: React.FC = () => {
   
   return (
     <div className="h-full flex flex-col">
-      <div className="border-b pb-2 mb-4 flex justify-between items-center">
-        <h3 className="text-lg font-medium text-gray-900">Bilateral Stimulation</h3>
-        <button
-          onClick={toggleBilateralStimulation}
-          className={`px-3 py-1 rounded-md text-white ${
-            bilateralActive ? 'bg-red-500' : 'bg-green-500'
-          }`}
-        >
-          {bilateralActive ? 'Stop' : 'Start'}
-        </button>
-      </div>
-      
-      <div className="flex mb-4 space-x-4">
-        <div className="w-1/2">
+      <div className="flex justify-between mb-6">
+        <div className="w-1/2 pr-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">Speed</label>
           <select
             value={bilateralSpeed}
             onChange={e => setBilateralSpeed(parseFloat(e.target.value))}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="w-full p-2 border border-gray-300 rounded-md"
             disabled={bilateralActive}
           >
             {speedOptions.map(speed => (
@@ -115,12 +103,12 @@ const BilateralStimulation: React.FC = () => {
           </select>
         </div>
         
-        <div className="w-1/2">
+        <div className="w-1/2 pl-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">Direction</label>
           <select
             value={bilateralDirection}
             onChange={e => setBilateralDirection(e.target.value as 'horizontal' | 'vertical')}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="w-full p-2 border border-gray-300 rounded-md"
             disabled={bilateralActive}
           >
             <option value="horizontal">Horizontal</option>
@@ -129,30 +117,67 @@ const BilateralStimulation: React.FC = () => {
         </div>
       </div>
       
-      <div
+      <div 
         ref={containerRef}
-        className="flex-1 relative border-2 border-gray-300 rounded-lg bg-gray-50"
+        className="flex-1 border-2 border-gray-300 rounded-lg relative"
+        style={{ backgroundColor: '#f8f9fa' }}
       >
         {bilateralDirection === 'horizontal' ? (
-          <div
-            className="absolute top-1/2 transform -translate-y-1/2 h-10 w-10 bg-indigo-600 rounded-full flex items-center justify-center text-white"
-            style={{ left: `${position}px` }}
-          >
-            {directionRef.current > 0 ? '➔' : '⬅'}
-          </div>
+          <>
+            {/* Visual arrows to show direction */}
+            <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none opacity-20">
+              <span className="text-2xl">←</span>
+              <span className="text-2xl">→</span>
+            </div>
+            
+            {/* Moving dot */}
+            <div
+              className="absolute top-1/2 transform -translate-y-1/2 h-10 w-10 rounded-full flex items-center justify-center"
+              style={{ 
+                left: `${position}px`,
+                backgroundColor: '#4338ca',
+                boxShadow: '0 0 10px rgba(0,0,0,0.3)'
+              }}
+            >
+              <span className="text-white">
+                {directionRef.current > 0 ? '→' : '←'}
+              </span>
+            </div>
+          </>
         ) : (
-          <div
-            className="absolute left-1/2 transform -translate-x-1/2 h-10 w-10 bg-indigo-600 rounded-full flex items-center justify-center text-white"
-            style={{ top: `${position}px` }}
-          >
-            {directionRef.current > 0 ? '⬇' : '⬆'}
-          </div>
+          <>
+            {/* Visual arrows to show direction */}
+            <div className="absolute inset-0 flex flex-col items-center justify-between py-4 pointer-events-none opacity-20">
+              <span className="text-2xl">↑</span>
+              <span className="text-2xl">↓</span>
+            </div>
+            
+            {/* Moving dot */}
+            <div
+              className="absolute left-1/2 transform -translate-x-1/2 h-10 w-10 rounded-full flex items-center justify-center"
+              style={{ 
+                top: `${position}px`,
+                backgroundColor: '#4338ca', 
+                boxShadow: '0 0 10px rgba(0,0,0,0.3)'
+              }}
+            >
+              <span className="text-white">
+                {directionRef.current > 0 ? '↓' : '↑'}
+              </span>
+            </div>
+          </>
         )}
       </div>
       
-      <div className="mt-4 text-center text-sm text-gray-500">
-        <p>Click Start to begin bilateral stimulation</p>
-        <p>Adjust speed and direction as needed for the client</p>
+      <div className="mt-6 flex justify-center">
+        <button
+          onClick={toggleBilateralStimulation}
+          className={`px-6 py-2 rounded-lg text-white font-medium ${
+            bilateralActive ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
+          }`}
+        >
+          {bilateralActive ? 'Stop' : 'Start'} Stimulation
+        </button>
       </div>
     </div>
   );

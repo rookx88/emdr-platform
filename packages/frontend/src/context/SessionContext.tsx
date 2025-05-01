@@ -1,6 +1,6 @@
 // packages/frontend/src/context/SessionContext.tsx
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { connect, Room, LocalTrack, LocalAudioTrack, LocalVideoTrack, LocalDataTrack, RemoteParticipant, RemoteTrack, LocalParticipant } from 'twilio-video';
+import { connect, Room, LocalTrack, LocalAudioTrack, LocalVideoTrack, RemoteParticipant, RemoteTrack } from 'twilio-video';
 import { useAuth } from './AuthContext';
 import axios from 'axios';
 

@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -35,6 +34,11 @@ model User {
   userActivity        UserActivity[]
   errorLogs           ErrorLog[]
   notes               Note[]
+  sessions            Session[]           // Added sessions relation
+  
+  // Added missing relations
+  therapistProfile    TherapistProfile?
+  clientProfile       ClientProfile?
   
   @@index([email])
 }
@@ -135,12 +139,71 @@ model Note {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   isEncrypted Boolean   @default(true)
+  sessionId   String?   // Optional relation to Session
+  session     Session?  @relation(fields: [sessionId], references: [id])
   
   @@index([authorId])
+  @@index([sessionId])
+}
+
+// Session model
+model Session {
+  id            String    @id @default(uuid())
+  title         String?
+  scheduledAt   DateTime
+  duration      Int?
+  endedAt       DateTime?
+  recordingUrl  String?
+  status        String    @default("SCHEDULED")  // SCHEDULED, CANCELED, STARTED, COMPLETED
+  sessionType   String    @default("STANDARD")   // STANDARD, EMDR, ASSESSMENT, INTAKE
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  creatorId     String
+  creator       User      @relation(fields: [creatorId], references: [id])
+  sessionNotes  Note[]
+  
+  @@index([creatorId])
+  @@index([scheduledAt])
+  @@index([status])
 }
 
 enum Role {
   ADMIN
   THERAPIST
   CLIENT
+}
+
+// Therapist profile with fix for missing relation
+model TherapistProfile {
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialties   String[]
+  bio           String?
+  licenseNumber String?
+  licenseState  String?
+  
+  // Add the missing relation
+  clients       ClientProfile[]
+
+  @@index([licenseNumber])
+}
+
+// Client profile with fix for missing relation
+model ClientProfile {
+  id                String    @id @default(uuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth       DateTime?
+  emergencyContact  String?
+  emergencyPhone    String?
+  address           String?
+  phoneNumber       String?
+  therapistId       String?
+  therapist         TherapistProfile? @relation(fields: [therapistId], references: [id])
+  
+  @@index([therapistId])
 }
