@@ -3,8 +3,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useSession } from '../../context/SessionContext';
 import { useAuth } from '../../context/AuthContext';
 import BilateralStimulation from './BilateralSimulation';
-import Transcript from './TranscriptPanel';
-import Notes from './NotesPanel';
+import TranscriptPanel from './TranscriptPanel';
+
+import NotesPanel from './NotesPanel';
 
 interface VideoSessionProps {
   sessionId: string;
@@ -66,8 +67,15 @@ const VideoSession: React.FC<VideoSessionProps> = ({ sessionId }) => {
       
       // Then attach new tracks
       localTracks.forEach(track => {
-        if (track.kind === 'video') {
-          const element = track.attach();
+        // Type casting for LocalTrack
+        const trackWithProperties = track as unknown as { 
+          kind?: string;
+          attach?: () => HTMLMediaElement;
+          mediaStreamTrack?: MediaStreamTrack;
+        };
+        
+        if (trackWithProperties.kind === 'video' && typeof trackWithProperties.attach === 'function') {
+          const element = trackWithProperties.attach();
           element.style.width = '100%';
           element.style.height = '100%';
           element.style.objectFit = 'cover';
@@ -189,7 +197,7 @@ const VideoSession: React.FC<VideoSessionProps> = ({ sessionId }) => {
           
           {/* Notes panel */}
           <div className="h-1/3 bg-white rounded-lg shadow">
-            <Notes
+            <NotesPanel
               notes={notes}
               noteContent={noteContent}
               setNoteContent={setNoteContent}
@@ -207,7 +215,7 @@ const VideoSession: React.FC<VideoSessionProps> = ({ sessionId }) => {
           
           {/* Transcript panel */}
           <div className="flex-1 bg-white rounded-lg shadow">
-            <Transcript transcriptions={transcriptions} />
+            <TranscriptPanel transcriptions={transcriptions} />
           </div>
         </div>
       </div>

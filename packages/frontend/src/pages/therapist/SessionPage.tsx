@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { SessionProvider } from '../../context/SessionContext';
 import VideoSession from '../../components/therapist/VideoSession';
-import axios from 'axios';
+
 
 const SessionPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();

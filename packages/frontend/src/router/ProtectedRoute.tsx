@@ -17,6 +17,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { user, loading } = useAuth();
   const location = useLocation();
 
+  console.log("ProtectedRoute check - user:", user, "loading:", loading);
+
   if (loading) {
     // You could show a loading screen here
     return <div>Loading...</div>;
@@ -35,5 +37,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // User is authenticated and authorized
   return <DashboardLayout>{children}</DashboardLayout>;
 };
+
 
 export default ProtectedRoute;

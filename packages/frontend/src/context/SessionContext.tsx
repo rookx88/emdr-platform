@@ -1,6 +1,6 @@
 // packages/frontend/src/context/SessionContext.tsx
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { connect, Room, LocalTrack, RemoteParticipant, RemoteTrack } from 'twilio-video';
+import { connect, Room, LocalTrack, LocalAudioTrack, LocalVideoTrack, LocalDataTrack, RemoteParticipant, RemoteTrack, LocalParticipant } from 'twilio-video';
 import { useAuth } from './AuthContext';
 import axios from 'axios';
 
@@ -200,26 +200,19 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       room.localParticipant.tracks.forEach(publication => {
         const track = publication.track;
         if (track) {
-          // Use type assertion to handle the track.stop() method
-          const trackWithStop = track as LocalTrack & { 
-            stop?: () => void;
-            mediaStreamTrack?: MediaStreamTrack;
-          };
-          
-          if (typeof trackWithStop.stop === 'function') {
-            trackWithStop.stop();
-          } else if (trackWithStop.mediaStreamTrack && typeof trackWithStop.mediaStreamTrack.stop === 'function') {
-            trackWithStop.mediaStreamTrack.stop();
+          // Type guard to check if it's an audio or video track with stop method
+          if (track.kind === 'audio' || track.kind === 'video') {
+            // Cast to appropriate type to access stop method
+            const mediaTrack = track as (LocalAudioTrack | LocalVideoTrack);
+            mediaTrack.stop();
           }
           
           // Detach any media elements
           if (track.kind === 'audio' || track.kind === 'video') {
             // Type cast to access the detach method
-            const mediaTrack = track as unknown as { detach: () => HTMLMediaElement[] };
-            if (typeof mediaTrack.detach === 'function') {
-              const attachments = mediaTrack.detach();
-              attachments.forEach((attachment: HTMLMediaElement) => attachment.remove());
-            }
+            const mediaTrack = track as (LocalAudioTrack | LocalVideoTrack);
+            const attachments = mediaTrack.detach();
+            attachments.forEach((attachment: HTMLMediaElement) => attachment.remove());
           }
         }
       });

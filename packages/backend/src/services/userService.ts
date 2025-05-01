@@ -1,5 +1,4 @@
-// Enhanced userService.ts with better HIPAA compliance
-
+// packages/backend/src/services/userService.ts
 import { PrismaClient, User, Role } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
@@ -60,60 +59,29 @@ const validatePassword = (password: string): { valid: boolean; message: string }
   return { valid: true, message: 'Password meets requirements' };
 };
 
+// Function to check if text is already encrypted
+
+
 // Function to encrypt sensitive data
+// Function to encrypt sensitive data - disabled version
 const encryptData = (text: string): string => {
-  // Skip encryption in test or development environment for now
-  if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
-    return text;
-  }
-  
-  try {
-    const algorithm = 'aes-256-cbc';
-    // The key needs to be exactly 32 bytes for AES-256
-    const keyString = process.env.DATABASE_ENCRYPTION_KEY || 'default-key-for-development-32bytes';
-    // Ensure the key is 32 bytes by hashing it if necessary
-    const key = crypto.createHash('sha256').update(keyString).digest();
-    const iv = crypto.randomBytes(16);
-    
-    const cipher = crypto.createCipheriv(algorithm, key, iv);
-    let encrypted = cipher.update(text, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    
-    return `${iv.toString('hex')}:${encrypted}`;
-  } catch (error) {
-    console.error('Encryption error:', error);
-    // Return plain text in case of error (for development)
-    return text;
-  }
+  // Simply return the text without encryption
+  return text;
 };
 
-// Function to decrypt sensitive data
+// Function to decrypt sensitive data - disabled version
 const decryptData = (encryptedText: string): string => {
-  // Skip decryption in test or development environment or if not encrypted
-  if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development' || !encryptedText.includes(':')) {
-    return encryptedText;
+  // If the text appears to be in encrypted format, extract just the data portion
+  if (encryptedText && typeof encryptedText === 'string' && encryptedText.includes(':')) {
+    return encryptedText.split(':')[1];
   }
-  
-  try {
-    const algorithm = 'aes-256-cbc';
-    const keyString = process.env.DATABASE_ENCRYPTION_KEY || 'default-key-for-development-32bytes';
-    // Ensure the key is 32 bytes by hashing it if necessary
-    const key = crypto.createHash('sha256').update(keyString).digest();
-    
-    const parts = encryptedText.split(':');
-    const iv = Buffer.from(parts[0], 'hex');
-    const encryptedData = parts[1];
-    
-    const decipher = crypto.createDecipheriv(algorithm, key, iv);
-    let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    
-    return decrypted;
-  } catch (error) {
-    console.error('Decryption error:', error);
-    // Return original text in case of error (for development)
-    return encryptedText;
-  }
+  // Otherwise return as is
+  return encryptedText;
+};
+
+// Helper to check if data is encrypted (keep this for compatibility)
+const isEncrypted = (text: string): boolean => {
+  return Boolean(text && typeof text === 'string' && /^[0-9a-f]{32}:.+$/i.test(text));
 };
 
 // Create audit log entry

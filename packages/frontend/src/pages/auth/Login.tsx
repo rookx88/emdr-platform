@@ -98,9 +98,19 @@ const Login: React.FC = () => {
     setLoading(true);
     
     try {
+      console.log("Login function called for email:", email);
       await login(email, password);
-      // Successful login - redirect to intended destination or dashboard
-      navigate(redirectParam || from, { replace: true });
+      
+      // Use dashboard route which will handle role-based redirection
+      const redirectPath = redirectParam || (from === '/' ? '/dashboard' : from);
+      
+      console.log("Login successful, redirecting to:", redirectPath);
+      
+      // Add a small delay to ensure context is updated before redirect
+      setTimeout(() => {
+        navigate(redirectPath, { replace: true });
+        console.log("Navigation triggered to:", redirectPath);
+      }, 100);
     } catch (err: any) {
       // Handle specific authentication errors
       if (err.response?.status === 401) {
