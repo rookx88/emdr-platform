@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 
 const TherapistDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -38,39 +39,31 @@ const TherapistDashboard: React.FC = () => {
   
   // Function to create a test session
   // Updated createTestSession function for TherapistDashboard.tsx
-const createTestSession = async () => {
-  try {
-    setIsCreatingSession(true);
-    
-    // Get token from context if available - your useAuth hook might provide this
-    const token = localStorage.getItem('token'); // Temporary fallback if needed
-    
-    const response = await axios.post('/api/sessions', {
-      title: `Test Session ${new Date().toLocaleTimeString()}`,
-      scheduledAt: new Date().toISOString(),
-      sessionType: 'EMDR'
-    }, {
-      withCredentials: true, // This sends cookies
-      headers: {
-        'Content-Type': 'application/json',
-        // Include Authorization header as fallback
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-      }
-    });
-    
-    console.log('Session created:', response.data);
-    
-    // Navigate to the new session
-    navigate(`/therapist/session/${response.data.id}`);
-  } catch (error) {
-    console.error('Failed to create test session:', error);
-    // More detailed error message
-    const errorMessage = (error as any).response?.data?.message || (error as any).message || 'Unknown error';
-    alert(`Failed to create test session: ${errorMessage}`);
-  } finally {
-    setIsCreatingSession(false);
-  }
-};
+  const createTestSession = async () => {
+    try {
+      setIsCreatingSession(true);
+      
+      console.log('Making API request to create session...');
+      
+      // Use your API service which already handles auth correctly
+      const response = await api.post('/sessions', {
+        title: `Test Session ${new Date().toLocaleTimeString()}`,
+        scheduledAt: new Date().toISOString(),
+        sessionType: 'EMDR'
+      });
+      
+      console.log('Session created successfully:', response.data);
+      
+      // Navigate to the new session
+      navigate(`/therapist/session/${response.data.id}`);
+    } catch (error: any) {
+      console.error('Failed to create test session:', error);
+      // Show more detailed error information
+      alert(`Failed to create session: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setIsCreatingSession(false);
+    }
+  };
   
   return (
     <div className="space-y-6">

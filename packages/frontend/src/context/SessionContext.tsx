@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { connect, Room, LocalTrack, LocalAudioTrack, LocalVideoTrack, RemoteParticipant, RemoteTrack } from 'twilio-video';
 import { useAuth } from './AuthContext';
-import axios from 'axios';
 
 interface Transcription {
   id?: string;
@@ -65,6 +64,7 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const sessionStartedRef = useRef<boolean>(false);
   
   const { user } = useAuth();
   
@@ -134,70 +134,131 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
   
+  // Load notes for a session
+  const loadNotes = useCallback(async (sessionId: string) => {
+    try {
+      const response = await fetch(`/api/sessions/notes/${sessionId}`);
+      const data = await response.json();
+      
+      if (data && data.notes) {
+        setNotes(data.notes.map((note: any) => ({
+          id: note.id,
+          content: note.content,
+          timestamp: new Date(note.createdAt)
+        })));
+      }
+    } catch (error) {
+      console.error('Error loading notes:', error);
+    }
+  }, []);
+  
   // Function to get Twilio token and connect to room
   const startSession = useCallback(async (sessionIdParam: string) => {
     if (!user) {
       throw new Error('User must be authenticated');
     }
     
+    // Prevent duplicate initialization
+    if (sessionStartedRef.current || room) {
+      console.log('Session already initialized, reusing existing room');
+      return;
+    }
+    
+    sessionStartedRef.current = true;
+    
     try {
       setIsConnecting(true);
       setSessionId(sessionIdParam);
       
       // Get token from backend
-      const tokenResponse = await axios.post('/api/sessions/token', {
-        sessionId: sessionIdParam
+      const tokenResponse = await fetch('/api/sessions/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sessionId: sessionIdParam })
       });
       
-      const { token, roomName } = tokenResponse.data;
+      const tokenData = await tokenResponse.json();
+      const { token, roomName } = tokenData;
       
       // Create room
-      await axios.post('/api/sessions/room', {
-        sessionId: sessionIdParam
+      await fetch('/api/sessions/room', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sessionId: sessionIdParam })
       });
       
-      // Get local tracks
-      const localTracks = await connect(token, {
+      // Connect to the room
+      console.log('Connecting to Twilio room:', roomName);
+      const twilioRoom = await connect(token, {
         name: roomName,
         audio: true,
         video: true,
         dominantSpeaker: true
       });
       
-      console.log('Connected to room:', localTracks.name);
-      setRoom(localTracks);
+      console.log('Connected to room:', twilioRoom.name);
+      setRoom(twilioRoom);
       
       // Save local audio and video tracks
-      setLocalTracks(Array.from(localTracks.localParticipant.tracks.values())
+      const tracks = Array.from(twilioRoom.localParticipant.tracks.values())
         .map(publication => publication.track)
-        .filter(track => track !== null) as LocalTrack[]);
+        .filter(track => track !== null) as LocalTrack[];
+      
+      setLocalTracks(tracks);
       
       // Set up event listeners for participants
-      localTracks.participants.forEach(handleParticipantConnected);
-      localTracks.on('participantConnected', handleParticipantConnected);
-      localTracks.on('participantDisconnected', handleParticipantDisconnected);
+      twilioRoom.participants.forEach(handleParticipantConnected);
+      twilioRoom.on('participantConnected', handleParticipantConnected);
+      twilioRoom.on('participantDisconnected', handleParticipantDisconnected);
       
       // Load existing notes if any
-      loadNotes(sessionIdParam);
+      await loadNotes(sessionIdParam);
       
       setIsConnecting(false);
     } catch (error) {
       console.error('Error connecting to session:', error);
+      sessionStartedRef.current = false;
       setIsConnecting(false);
       throw error;
     }
-  }, [user, handleParticipantConnected, handleParticipantDisconnected]);
+  }, [user, handleParticipantConnected, handleParticipantDisconnected, loadNotes]);
+  
+  // Function to stop recording
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      console.log('Recording stopped');
+    }
+  }, []);
   
   // Function to end session
   const endSession = useCallback(async () => {
-    if (room) {
-      // Stop recording if active
-      if (isRecording) {
-        stopRecording();
-      }
-      
-      // Disconnect and clean up
-      room.localParticipant.tracks.forEach(publication => {
+    // Prevent multiple calls to end the same session
+    if (!room || !sessionStartedRef.current) {
+      console.log('No active room to end');
+      return;
+    }
+    
+    const roomToEnd = room;
+    const currentSessionId = sessionId;
+    
+    // Reset state before async operations to prevent race conditions
+    setRoom(null);
+    sessionStartedRef.current = false;
+    
+    if (isRecording) {
+      stopRecording();
+    }
+    
+    // Disconnect and clean up
+    try {
+      // Clean up local tracks
+      roomToEnd.localParticipant.tracks.forEach(publication => {
         const track = publication.track;
         if (track) {
           // Type guard to check if it's an audio or video track with stop method
@@ -211,49 +272,60 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (track.kind === 'audio' || track.kind === 'video') {
             // Type cast to access the detach method
             const mediaTrack = track as (LocalAudioTrack | LocalVideoTrack);
-            const attachments = mediaTrack.detach();
-            attachments.forEach((attachment: HTMLMediaElement) => attachment.remove());
+            try {
+              const attachments = mediaTrack.detach();
+              attachments.forEach((attachment: HTMLMediaElement) => {
+                try {
+                  attachment.remove();
+                } catch (e) {
+                  console.warn('Error removing media element:', e);
+                }
+              });
+            } catch (e) {
+              console.warn('Error detaching media track:', e);
+            }
           }
         }
       });
       
       // End room on server
-      if (sessionId) {
+      if (currentSessionId) {
         try {
-          await axios.post('/api/sessions/room/end', {
-            roomSid: room.sid,
-            sessionId
+          await fetch('/api/sessions/room/end', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              roomSid: roomToEnd.sid,
+              sessionId: currentSessionId
+            })
           });
         } catch (error) {
-          console.error('Error ending room on server:', error);
+          console.warn('Error ending room on server, continuing cleanup:', error);
         }
       }
       
-      room.disconnect();
-      setRoom(null);
+      // Disconnect from the room
+      try {
+        roomToEnd.disconnect();
+      } catch (e) {
+        console.warn('Error disconnecting from room:', e);
+      }
+      
+      // Reset all state
       setLocalTracks([]);
       setParticipants(new Map());
       setSessionId(null);
       setTranscriptions([]);
       setBilateralActive(false);
-    }
-  }, [room, isRecording, sessionId]);
-  
-  // Load notes for session
-  const loadNotes = async (sessionId: string) => {
-    try {
-      const response = await axios.get(`/api/sessions/notes/${sessionId}`);
-      if (response.data && response.data.notes) {
-        setNotes(response.data.notes.map((note: any) => ({
-          id: note.id,
-          content: note.content,
-          timestamp: new Date(note.createdAt)
-        })));
-      }
+      
+      console.log('Session ended and cleaned up');
     } catch (error) {
-      console.error('Error loading notes:', error);
+      console.error('Error during session cleanup:', error);
+      throw error;
     }
-  };
+  }, [room, isRecording, sessionId, stopRecording]);
   
   // Function to start recording
   const startRecording = useCallback(() => {
@@ -306,15 +378,6 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [room]);
   
-  // Function to stop recording
-  const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      console.log('Recording stopped');
-    }
-  }, []);
-  
   // Function to transcribe audio
   const transcribeAudio = useCallback(async (audioBlob: Blob) => {
     if (!sessionId) return;
@@ -330,13 +393,21 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const base64Audio = base64data.split(',')[1];
         
         // Send to server for transcription
-        const response = await axios.post('/api/sessions/transcribe', {
-          audioContent: base64Audio,
-          sessionId
+        const response = await fetch('/api/sessions/transcribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            audioContent: base64Audio,
+            sessionId
+          })
         });
         
-        if (response.data && response.data.transcription) {
-          const transcription = response.data.transcription.trim();
+        const data = await response.json();
+        
+        if (data && data.transcription) {
+          const transcription = data.transcription.trim();
           if (transcription) {
             setTranscriptions(prev => [
               ...prev,
@@ -359,16 +430,24 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!sessionId || !content.trim()) return;
     
     try {
-      const response = await axios.post('/api/sessions/notes', {
-        content,
-        sessionId
+      const response = await fetch('/api/sessions/notes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content,
+          sessionId
+        })
       });
       
-      if (response.data && response.data.note) {
+      const data = await response.json();
+      
+      if (data && data.note) {
         setNotes(prev => [
           ...prev,
           {
-            id: response.data.note.id,
+            id: data.note.id,
             content,
             timestamp: new Date()
           }
@@ -387,11 +466,40 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Clean up when component unmounts
   useEffect(() => {
     return () => {
-      if (room) {
-        room.disconnect();
-      }
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
+      // Only attempt cleanup if we have an active session
+      if (sessionStartedRef.current && room) {
+        console.log('Cleaning up session on unmount');
+        
+        // Stop recording if active
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+          mediaRecorderRef.current.stop();
+        }
+        
+        // Clean up tracks without waiting for async operations
+        if (room && room.localParticipant) {
+          room.localParticipant.tracks.forEach(publication => {
+            const track = publication.track;
+            if (track && (track.kind === 'audio' || track.kind === 'video')) {
+              try {
+                (track as any).stop();
+                const attachments = (track as any).detach();
+                if (attachments) {
+                  attachments.forEach((element: HTMLElement) => element.remove());
+                }
+              } catch (e) {
+                console.warn('Error cleaning up track:', e);
+              }
+            }
+          });
+        }
+        
+        try {
+          room.disconnect();
+        } catch (e) {
+          console.warn('Error disconnecting from room during cleanup:', e);
+        }
+        
+        sessionStartedRef.current = false;
       }
     };
   }, [room]);

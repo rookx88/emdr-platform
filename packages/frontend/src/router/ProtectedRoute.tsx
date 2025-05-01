@@ -1,4 +1,4 @@
-// src/router/ProtectedRoute.tsx
+// packages/frontend/src/router/ProtectedRoute.tsx
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -8,11 +8,13 @@ import DashboardLayout from '../layouts/DashBoardLayout';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: Role[];
+  noLayout?: boolean; // Add this prop
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  allowedRoles = [] 
+  allowedRoles = [],
+  noLayout = false // Default to false
 }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
@@ -35,8 +37,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // User is authenticated and authorized
+  if (noLayout) {
+    return <>{children}</>; // Return children directly without DashboardLayout
+  }
+  
+  // Return with Dashboard Layout if noLayout is false
   return <DashboardLayout>{children}</DashboardLayout>;
 };
-
 
 export default ProtectedRoute;

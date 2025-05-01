@@ -9,6 +9,9 @@ const twilioClient = twilio(
   process.env.TWILIO_AUTH_TOKEN
 );
 
+// Keep track of room creation attempts to prevent duplicates
+const roomCreationAttempts = new Map<string, boolean>();
+
 export const twilioService = {
   /**
    * Generate an access token for Twilio Video
@@ -52,8 +55,29 @@ export const twilioService = {
    * @returns Room SID
    */
   createOrGetRoom: async (roomName: string) => {
+    // Check if we're already attempting to create this room
+    if (roomCreationAttempts.get(roomName)) {
+      console.log(`Room creation for ${roomName} already in progress, waiting...`);
+      
+      // Wait for a short time and check if room exists
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const existingRooms = await twilioClient.video.v1.rooms.list({
+        uniqueName: roomName,
+        status: 'in-progress'
+      });
+      
+      if (existingRooms.length > 0) {
+        console.log(`Found existing room ${roomName} after waiting`);
+        return existingRooms[0];
+      }
+    }
+    
+    // Mark that we're attempting to create this room
+    roomCreationAttempts.set(roomName, true);
+    
     try {
-      // Check if the room already exists
+      // First check if the room already exists
       const rooms = await twilioClient.video.v1.rooms.list({
         uniqueName: roomName,
         status: 'in-progress'
@@ -61,22 +85,43 @@ export const twilioService = {
 
       // If room exists, return it
       if (rooms.length > 0) {
+        console.log(`Room ${roomName} already exists, returning existing room`);
         return rooms[0];
       }
 
       // If room doesn't exist, create it
-      const room = await twilioClient.video.v1.rooms.create({
-        uniqueName: roomName,
-        type: 'group', // Use 'group' for multiparty rooms
-        recordParticipantsOnConnect: false, // Set to true if you want to record
-        statusCallback: process.env.TWILIO_STATUS_CALLBACK,
-        statusCallbackMethod: 'POST'
-      });
-
-      return room;
+      try {
+        console.log(`Creating new room ${roomName}`);
+        const room = await twilioClient.video.v1.rooms.create({
+          uniqueName: roomName,
+          type: 'group', // Use 'group' for multiparty rooms
+          recordParticipantsOnConnect: false, // Set to true if you want to record
+          statusCallback: process.env.TWILIO_STATUS_CALLBACK,
+          statusCallbackMethod: 'POST'
+        });
+        
+        return room;
+      } catch (error: any) {
+        // If error is "Room exists", try to fetch it again (race condition)
+        if (error.code === 53113) {
+          console.log('Room exists error, fetching room instead');
+          const existingRooms = await twilioClient.video.v1.rooms.list({
+            uniqueName: roomName,
+            status: 'in-progress'
+          });
+          
+          if (existingRooms.length > 0) {
+            return existingRooms[0];
+          }
+        }
+        throw error;
+      }
     } catch (error) {
       console.error('Error creating or getting room:', error);
       throw error;
+    } finally {
+      // Clear the attempt flag
+      roomCreationAttempts.delete(roomName);
     }
   },
 
@@ -87,10 +132,28 @@ export const twilioService = {
    */
   endRoom: async (roomSid: string) => {
     try {
-      const room = await twilioClient.video.v1.rooms(roomSid).update({
-        status: 'completed'
-      });
-      return room;
+      // Check if room exists first
+      try {
+        const room = await twilioClient.video.v1.rooms(roomSid).fetch();
+        
+        // Only try to end if it exists and is in progress
+        if (room && room.status === 'in-progress') {
+          console.log(`Ending room ${roomSid}`);
+          return await twilioClient.video.v1.rooms(roomSid).update({
+            status: 'completed'
+          });
+        } else {
+          console.log(`Room ${roomSid} is not in progress (status: ${room.status}), skipping end operation`);
+          return room;
+        }
+      } catch (fetchError: any) {
+        // Room doesn't exist, no need to end it
+        if (fetchError.status === 404) {
+          console.log(`Room ${roomSid} not found, skipping end operation`);
+          return null;
+        }
+        throw fetchError;
+      }
     } catch (error) {
       console.error('Error ending room:', error);
       throw error;

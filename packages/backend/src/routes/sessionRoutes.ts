@@ -177,7 +177,7 @@ router.post('/room/end', authenticate, async (req, res, next) => {
         'END_ROOM',
         'Session',
         sessionId,
-        { roomSid, status: room.status }
+        { roomSid, status: room?.status || 'unknown' }
       );
       
       res.json({ success: true, room });

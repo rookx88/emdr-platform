@@ -49,16 +49,16 @@ const AppRouter: React.FC = () => {
                 </ProtectedRoute>
               }
             />
-            
+
             {/* New route for therapy sessions */}
             <Route
               path="/therapist/session/:sessionId"
               element={
-                <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
+                <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]} noLayout={true}>
                   <SessionPage />
                 </ProtectedRoute>
               }
-            />
+            />  
 
             <Route
               path="/client"

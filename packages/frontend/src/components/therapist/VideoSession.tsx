@@ -24,12 +24,6 @@ const VideoSession: React.FC<VideoSessionProps> = ({ sessionId }) => {
     transcriptions,
     notes,
     saveNote,
-    bilateralActive,
-    bilateralSpeed,
-    bilateralDirection,
-    setBilateralSpeed,
-    setBilateralDirection,
-    toggleBilateralStimulation
   } = useSession();
   
   const { user } = useAuth();
@@ -122,104 +116,130 @@ const VideoSession: React.FC<VideoSessionProps> = ({ sessionId }) => {
     ? sessionId 
     : `${sessionId.slice(0, 8)}-${sessionId.slice(8, 12)}-${sessionId.slice(12, 16)}-${sessionId.slice(16, 20)}-${sessionId.slice(20)}`;
   
-  // Simplified style to match screenshot
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      {/* Header with HIPAA notice and copyright */}
-      <header className="p-2 text-center text-sm text-gray-600">
-        <div>HIPAA Compliant</div>
-        <div>© 2025 EMDR Platform</div>
-      </header>
-      
-      {/* Session title */}
-      <h1 className="text-2xl font-bold text-center my-4">
-        EMDR Therapy Session {formattedSessionId}
-      </h1>
-      
-      {/* Recording controls */}
-      <div className="flex justify-center mb-4">
-        <button
-          onClick={toggleRecording}
-          className="px-3 py-1 bg-gray-200 rounded-md text-gray-800 mr-2"
-        >
-          {isRecording ? 'Stop Recording' : 'Start Recording'}
-        </button>
-        <button
-          onClick={handleEndSession}
-          className="px-3 py-1 bg-gray-200 rounded-md text-gray-800"
-        >
-          End Session
+    <div className="min-h-screen flex flex-col">
+      {/* Side control bar - camera icon */}
+      <div className="fixed left-0 top-0 bottom-0 w-16 bg-gray-800 flex flex-col items-center pt-8">
+        <button className="text-white p-2 rounded hover:bg-gray-700">
+          <span className="text-2xl">📹</span>
         </button>
       </div>
       
-      {/* Video section */}
-      <div className="mx-auto w-full max-w-3xl px-4">
-        {error ? (
-          <div className="bg-red-50 p-4 rounded-md text-center mb-8">
+      {/* Main content */}
+      <div className="ml-16 flex-1 p-4">
+        {/* Error display */}
+        {error && (
+          <div className="bg-red-50 p-4 rounded-md text-center mb-4">
             <h2 className="text-lg font-semibold text-red-800">Error</h2>
             <p className="text-red-700">{error}</p>
-            <p className="mt-2 text-sm text-red-600">Request failed with status code 401</p>
-          </div>
-        ) : isConnecting ? (
-          <div className="text-center p-8 mb-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Connecting to session...</p>
-          </div>
-        ) : (
-          <div className="h-48 mb-8" ref={localVideoRef}>
-            {/* Video will be attached here by the useEffect hook */}
           </div>
         )}
-      </div>
-      
-      {/* Bilateral Stimulation */}
-      <div className="mx-auto w-full max-w-3xl px-4 mb-8">
-        <h2 className="text-xl font-bold text-center mb-4">Bilateral Stimulation</h2>
-        <BilateralStimulation />
-      </div>
-      
-      {/* Transcript */}
-      <div className="mx-auto w-full max-w-3xl px-4 mb-8">
-        <h2 className="text-xl font-bold text-center mb-4">Real-time Transcript</h2>
-        <TranscriptPanel transcriptions={transcriptions} />
-      </div>
-      
-      {/* AI-Assisted Notes */}
-      <div className="mx-auto w-full max-w-3xl px-4 mb-8">
-        <h2 className="text-xl font-bold text-center mb-4">AI-Assisted Notes</h2>
         
-        <div className="mb-4">
-          <h3 className="font-medium mb-2">Key Observations:</h3>
-          <ul className="list-disc pl-8">
-            <li>Client showed reduced anxiety when discussing [topic]</li>
-            <li>Progress noted in bilateral processing</li>
-            <li>Consider follow-up on resources discussed</li>
-          </ul>
+        {/* Grid layout container to match wireframe */}
+        <div className="border rounded-lg p-4">
+          {/* Session controls */}
+          <div className="flex justify-between mb-4">
+            <h1 className="text-lg font-semibold">Session: {formattedSessionId}</h1>
+            <div>
+              <button
+                onClick={toggleRecording}
+                className="px-3 py-1 bg-gray-200 rounded-md text-gray-800 mr-2"
+              >
+                {isRecording ? 'Stop Recording' : 'Start Recording'}
+              </button>
+              <button
+                onClick={handleEndSession}
+                className="px-3 py-1 bg-red-500 text-white rounded-md"
+              >
+                End Session
+              </button>
+            </div>
+          </div>
+          
+          {/* Grid layout for videos and tools */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Left side - Video feeds */}
+            <div className="flex flex-col">
+              {/* Main therapist video */}
+              <div 
+                className="bg-gray-100 rounded-lg h-80 mb-4 flex items-center justify-center"
+                ref={localVideoRef}
+              >
+                {isConnecting && (
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Connecting...</p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Client video thumbnail */}
+              <div 
+                className="bg-gray-100 border border-gray-300 rounded-lg h-32"
+                ref={remoteVideosRef}
+              >
+                {participants.size === 0 && (
+                  <div className="h-full flex items-center justify-center text-gray-500">
+                    Waiting for client...
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Right side - Tools grid */}
+            <div className="grid grid-rows-2 gap-4">
+              {/* Top row of tools */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Bilateral Stimulation */}
+                <div className="border rounded-lg p-4">
+                  <h2 className="text-lg font-semibold mb-2">Bilateral Stimulation</h2>
+                  <BilateralStimulation />
+                </div>
+                
+                {/* Transcript */}
+                <div className="border rounded-lg p-4">
+                  <h2 className="text-lg font-semibold mb-2">Transcript</h2>
+                  <TranscriptPanel transcriptions={transcriptions} />
+                </div>
+              </div>
+              
+              {/* Bottom row of tools */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* AI-Assisted Notes */}
+                <div className="border rounded-lg p-4 overflow-auto">
+                  <h2 className="text-lg font-semibold mb-2">AI-Assisted Notes</h2>
+                  <div className="mb-4">
+                    <h3 className="font-medium mb-1">Key Observations:</h3>
+                    <ul className="list-disc pl-6 text-sm">
+                      <li>Client showed reduced anxiety when discussing [topic]</li>
+                      <li>Progress noted in bilateral processing</li>
+                      <li>Consider follow-up on resources discussed</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <h3 className="font-medium mb-1">Suggested Topics:</h3>
+                    <ul className="list-disc pl-6 text-sm">
+                      <li>Explore connection between [event] and current symptoms</li>
+                      <li>Discuss coping strategies for [situation]</li>
+                    </ul>
+                  </div>
+                </div>
+                
+                {/* Therapist Notes */}
+                <div className="border rounded-lg p-4 overflow-auto">
+                  <h2 className="text-lg font-semibold mb-2">Therapist Notes</h2>
+                  <NotesPanel
+                    notes={notes}
+                    noteContent={noteContent}
+                    setNoteContent={setNoteContent}
+                    handleNoteSubmit={handleNoteSubmit}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        
-        <div className="mb-4">
-          <h3 className="font-medium mb-2">Suggested Topics:</h3>
-          <ul className="list-disc pl-8">
-            <li>Explore connection between [event] and current symptoms</li>
-            <li>Discuss coping strategies for [situation]</li>
-          </ul>
-        </div>
-        
-        <div>
-          <h3 className="font-medium mb-2">Session Summary Draft:</h3>
-          <p>Session focused on processing [trigger]. Client demonstrated improved ability to maintain dual awareness during bilateral stimulation. Positive cognition "I am safe now" strengthened from VOC 3 to VOC 5.</p>
-        </div>
-      </div>
-      
-      {/* Therapist Notes */}
-      <div className="mx-auto w-full max-w-3xl px-4 mb-8">
-        <h2 className="text-xl font-bold text-center mb-4">Therapist Notes</h2>
-        <NotesPanel
-          notes={notes}
-          noteContent={noteContent}
-          setNoteContent={setNoteContent}
-          handleNoteSubmit={handleNoteSubmit}
-        />
       </div>
     </div>
   );
