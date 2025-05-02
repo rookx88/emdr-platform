@@ -8,7 +8,9 @@ import { errorHandler } from './middlewares/errorHandler';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import sessionRoutes from './routes/sessionRoutes'; // Add this line
-
+import clientRoutes from './routes/clientRoutes';
+import therapistRoutes from './routes/therapistRoutes';
+import appointmentRoutes from './routes/appointmentRoutes';
 // Load environment variables
 dotenv.config({ 
   path: process.env.NODE_ENV === 'production' 
@@ -50,6 +52,9 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/sessions', sessionRoutes); // Add this line
+app.use('/api/clients', clientRoutes);
+app.use('/api/therapists', therapistRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
