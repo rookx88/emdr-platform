@@ -20,17 +20,22 @@ import ClientDashboard from '../pages/client/Dashboard';
 // Session pages
 import SessionPage from '../pages/therapist/SessionPage'; // Import the new SessionPage
 
+// Appointment pages
+import TherapistAppointmentsPage from '../pages/therapist/AppointmentsPage';
+import ClientAppointmentsPage from '../pages/client/AppointmentsPage';
+
 // Other pages
 import NotFound from '../pages/NotFound';
 import Unauthorized from '../pages/Unauthorized';
 
 import ErrorBoundary from '../components/common/ErrorBoundary';
-
+import { CalendarProvider } from '../context/CalendarContext';
 const AppRouter: React.FC = () => {
   return (
     <Router>
       <ErrorBoundary>
         <AuthProvider>
+          <CalendarProvider>
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Landing />} />
@@ -58,7 +63,24 @@ const AppRouter: React.FC = () => {
                   <SessionPage />
                 </ProtectedRoute>
               }
-            />  
+            />
+            <Route
+              path="/therapist/appointments"
+              element={
+                <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
+                  <TherapistAppointmentsPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/client/appointments"
+              element={
+                <ProtectedRoute allowedRoles={[Role.CLIENT]}>
+                  <ClientAppointmentsPage />
+                </ProtectedRoute>
+              }
+            />
 
             <Route
               path="/client"
@@ -79,6 +101,7 @@ const AppRouter: React.FC = () => {
             {/* 404 Not Found */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </CalendarProvider>
         </AuthProvider>
       </ErrorBoundary>
     </Router>

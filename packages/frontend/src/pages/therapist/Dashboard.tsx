@@ -68,7 +68,7 @@ const TherapistDashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold text-gray-900">Therapist Dashboard</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">Hello Sammy, welcome back!</h1>
         <div className="text-sm text-gray-600">
           Welcome back, {user?.firstName || user?.email}
         </div>

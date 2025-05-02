@@ -1,5 +1,7 @@
 .App {
-  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .App-logo {
@@ -35,4 +37,69 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* packages/frontend/src/App.css - add these styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* For the sidebar with collapsed state */
+.sidebar.collapsed {
+  width: 60px !important;
+}
+
+/* Adjust main content when sidebar is collapsed */
+.sidebar.collapsed + main {
+  margin-left: 60px !important;
+}
+
+/* Remove defaults from lists within sidebar */
+.sidebar ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+/* Style custom bullet points in the therapist dashboard */
+.dashboard-list {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.dashboard-list li {
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+}
+
+.dashboard-list li::before {
+  content: "•";
+  color: #4f46e5;
+  font-weight: bold;
+  display: inline-block; 
+  width: 1em;
+  margin-left: -1em;
+}
+
+/* Fix for the sidebar toggle button */
+.sidebar-toggle {
+  position: absolute;
+  right: -12px !important; /* Override inline style if needed */
+  top: 70px;
+  width: 24px !important;
+  height: 24px !important;
+  background-color: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  z-index: 999 !important; /* Very high z-index */
+  box-shadow: 0 0 5px rgba(0,0,0,0.5);
 }

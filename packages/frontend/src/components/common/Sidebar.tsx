@@ -1,69 +1,215 @@
-// src/components/common/Sidebar.tsx
-import React from 'react';
+// packages/frontend/src/components/common/Sidebar.tsx
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Role } from '../../types';
 
-const Sidebar: React.FC = () => {
+// Define the prop types interface
+interface SidebarProps {
+  collapsed?: boolean;
+  onToggle?: (collapsed: boolean) => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ 
+  collapsed: externalCollapsed, 
+  onToggle 
+}) => {
   const { user } = useAuth();
   const location = useLocation();
+  // Use internal state if no external state is provided
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
+  
+  // Determine which collapsed state to use
+  const collapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
   
   if (!user) return null;
   
   const isActive = (path: string) => location.pathname.startsWith(path);
+
+  const icons = {
+    dashboard: '🏠',
+    clients: '👥',
+    sessions: '📅',
+    tools: '🧰',
+    profile: '👤',
+    appointments: '📆'
+  };
   
-  const therapistLinks = [
-    { to: '/therapist', label: 'Dashboard', icon: '📊' },
-    { to: '/therapist/clients', label: 'Clients', icon: '👥' },
-    { to: '/therapist/sessions', label: 'Sessions', icon: '🗓️' },
-    { to: '/therapist/tools', label: 'EMDR Tools', icon: '🧰' },
-    { to: '/therapist/profile', label: 'Profile', icon: '👤' },
-  ];
-  
-  const clientLinks = [
-    { to: '/client', label: 'Dashboard', icon: '📊' },
-    { to: '/client/sessions', label: 'My Sessions', icon: '🗓️' },
-    { to: '/client/resources', label: 'Resources', icon: '📚' },
-    { to: '/client/profile', label: 'Profile', icon: '👤' },
-  ];
-  
-  const links = user.role === Role.CLIENT ? clientLinks : therapistLinks;
+  // Handle toggle
+  const handleToggle = () => {
+    if (onToggle) {
+      onToggle(!collapsed);
+    } else {
+      setInternalCollapsed(!internalCollapsed);
+    }
+  };
   
   return (
-    <div className="h-full bg-gray-800 text-white w-64 px-4 py-6 flex flex-col">
-      <div className="mb-8 text-center">
-        <div className="w-20 h-20 rounded-full bg-indigo-500 mx-auto flex items-center justify-center text-2xl font-bold">
-          {user.firstName?.[0] || user.email[0].toUpperCase()}
+    <div style={{
+      position: 'fixed',
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: collapsed ? '60px' : '200px',
+      backgroundColor: '#1f2937', // Dark blue/gray
+      color: 'white',
+      zIndex: 50, // Below navbar
+      paddingTop: '60px', // Space for header
+      transition: 'width 0.3s ease',
+      overflowY: 'auto',
+      overflowX: 'hidden',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      {/* User profile section */}
+      {!collapsed && (
+        <div style={{ 
+          marginBottom: '10px', 
+          padding: '5px 10px',
+          textAlign: 'center' 
+        }}>
+          <div>skordi@uci.edu</div>
+          <div style={{ fontWeight: 'bold' }}>THERAPIST</div>
         </div>
-        <div className="mt-2 font-medium">{user.firstName || user.email}</div>
-        <div className="text-sm text-gray-400">{user.role}</div>
+      )}
+      
+      {/* Navigation links */}
+      <div style={{ 
+        flex: '1 0 auto',
+        padding: collapsed ? '5px' : '10px' 
+      }}>
+        <ul style={{ 
+          listStyle: 'none', 
+          padding: 0, 
+          margin: 0
+        }}>
+          <li style={{ marginBottom: '5px' }}>
+            <Link to="/therapist" style={{ 
+              display: 'flex',
+              alignItems: 'center', 
+              color: 'white',
+              textDecoration: 'none',
+              padding: collapsed ? '10px 5px' : '10px',
+              borderRadius: '4px',
+              justifyContent: collapsed ? 'center' : 'flex-start'
+            }}>
+              <span style={{ fontSize: '20px' }}>{icons.dashboard}</span>
+              {!collapsed && <span style={{ marginLeft: '10px' }}>Dashboard</span>}
+            </Link>
+          </li>
+          <li style={{ marginBottom: '5px' }}>
+            <Link to="/therapist/clients" style={{ 
+              display: 'flex',
+              alignItems: 'center', 
+              color: 'white',
+              textDecoration: 'none',
+              padding: collapsed ? '10px 5px' : '10px',
+              borderRadius: '4px',
+              justifyContent: collapsed ? 'center' : 'flex-start'
+            }}>
+              <span style={{ fontSize: '20px' }}>{icons.clients}</span>
+              {!collapsed && <span style={{ marginLeft: '10px' }}>Clients</span>}
+            </Link>
+          </li>
+          <li style={{ marginBottom: '5px' }}>
+            <Link to="/therapist/sessions" style={{ 
+              display: 'flex',
+              alignItems: 'center', 
+              color: 'white',
+              textDecoration: 'none',
+              padding: collapsed ? '10px 5px' : '10px',
+              borderRadius: '4px',
+              justifyContent: collapsed ? 'center' : 'flex-start'
+            }}>
+              <span style={{ fontSize: '20px' }}>{icons.sessions}</span>
+              {!collapsed && <span style={{ marginLeft: '10px' }}>Sessions</span>}
+            </Link>
+          </li>
+          <li style={{ marginBottom: '5px' }}>
+            <Link to="/therapist/tools" style={{ 
+              display: 'flex',
+              alignItems: 'center', 
+              color: 'white',
+              textDecoration: 'none',
+              padding: collapsed ? '10px 5px' : '10px',
+              borderRadius: '4px',
+              justifyContent: collapsed ? 'center' : 'flex-start'
+            }}>
+              <span style={{ fontSize: '20px' }}>{icons.tools}</span>
+              {!collapsed && <span style={{ marginLeft: '10px' }}>EMDR Tools</span>}
+            </Link>
+          </li>
+          <li style={{ marginBottom: '5px' }}>
+            <Link to="/therapist/profile" style={{ 
+              display: 'flex',
+              alignItems: 'center', 
+              color: 'white',
+              textDecoration: 'none',
+              padding: collapsed ? '10px 5px' : '10px',
+              borderRadius: '4px',
+              justifyContent: collapsed ? 'center' : 'flex-start'
+            }}>
+              <span style={{ fontSize: '20px' }}>{icons.profile}</span>
+              {!collapsed && <span style={{ marginLeft: '10px' }}>Profile</span>}
+            </Link>
+          </li>
+          <li style={{ marginBottom: '20px' }}> {/* Added extra margin for spacing */}
+            <Link to="/therapist/appointments" style={{ 
+              display: 'flex',
+              alignItems: 'center', 
+              color: 'white',
+              textDecoration: 'none',
+              padding: collapsed ? '10px 5px' : '10px',
+              borderRadius: '4px',
+              justifyContent: collapsed ? 'center' : 'flex-start'
+            }}>
+              <span style={{ fontSize: '20px' }}>{icons.appointments}</span>
+              {!collapsed && <span style={{ marginLeft: '10px' }}>Appointments</span>}
+            </Link>
+          </li>
+        </ul>
+        
+        {/* Toggle button moved below the navigation links */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          marginTop: '10px',
+          marginBottom: '10px',
+          padding: '5px'
+        }}>
+          <button
+            onClick={handleToggle}
+            style={{
+              width: '30px',
+              height: '30px',
+              backgroundColor: '#374151',
+              border: '1px solid #4B5563',
+              borderRadius: '50%',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              fontSize: '14px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
+            }}
+          >
+            {collapsed ? '❯' : '❮'}
+          </button>
+        </div>
       </div>
       
-      <nav className="flex-1">
-        <ul className="space-y-2">
-          {links.map((link) => (
-            <li key={link.to}>
-              <Link
-                to={link.to}
-                className={`flex items-center p-3 rounded-md transition-colors ${
-                  isActive(link.to)
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-700'
-                }`}
-              >
-                <span className="mr-3">{link.icon}</span>
-                {link.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      
-      <div className="pt-4 mt-auto border-t border-gray-700">
-        <div className="text-sm text-gray-400 mb-2">HIPAA Compliant</div>
-        <div className="text-xs text-gray-500">
-          © {new Date().getFullYear()} EMDR Platform
-        </div>
+      {/* Footer */}
+      <div style={{
+        padding: collapsed ? '10px 5px' : '10px',
+        textAlign: 'center',
+        fontSize: collapsed ? '10px' : '12px',
+        borderTop: '1px solid #374151',
+        marginTop: 'auto'
+      }}>
+        <div>HIPAA</div>
+        <div>Compliant</div>
+        <div>© 2025</div>
       </div>
     </div>
   );
