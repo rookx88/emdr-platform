@@ -25,11 +25,12 @@
     min-height: 110px;
     border-radius: 4px;
     position: relative;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    overflow: hidden;
+    transition: all 0.3s ease;
+    overflow: visible;
     display: flex;
     flex-direction: column;
     padding: 4px;
+    cursor: pointer;
   }
   
   .calendar-day-cell:hover {
@@ -41,12 +42,20 @@
   /* Empty cells */
   .calendar-day-cell.empty {
     background-color: #f9fafb;
+    cursor: default;
   }
   
   /* Today styling */
   .calendar-day-cell.today {
     background-color: #eef2ff;
     box-shadow: inset 0 0 0 2px #6366f1;
+  }
+  
+  /* Expanded day styling */
+  .calendar-day-cell.expanded {
+    background-color: #f9fafb;
+    z-index: 50;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   }
   
   /* Day number styling */
@@ -108,6 +117,208 @@
     border-left-color: #9ca3af;
   }
   
+  /* More appointments indicator */
+  .appointment-more {
+    font-size: 0.7rem;
+    color: #6b7280;
+    text-align: center;
+    padding: 2px;
+    margin-top: 2px;
+    background-color: #f3f4f6;
+    border-radius: 4px;
+  }
+  
+  /* Calendar container */
+  .calendar-container {
+    position: relative;
+  }
+  
+  /* Expanded day view */
+  .expanded-day-view {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: -8px;
+    z-index: 100;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    width: 360px;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #e5e7eb;
+  }
+  
+  /* Expanded day header */
+  .expanded-day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 5;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  
+  .expanded-day-title {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.9rem;
+  }
+  
+  .expanded-day-close {
+    font-size: 1.3rem;
+    color: #6b7280;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+  }
+  
+  .expanded-day-close:hover {
+    background-color: #f3f4f6;
+    color: #4b5563;
+  }
+  
+  /* Empty state */
+  .expanded-day-empty {
+    padding: 16px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+  
+  /* Appointment list */
+  .expanded-day-appointments {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .expanded-day-appointment {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  
+  .expanded-day-appointment:last-child {
+    border-bottom: none;
+  }
+  
+  /* Appointment time */
+  .appointment-time {
+    font-size: 0.8rem;
+    color: #6b7280;
+    font-weight: 500;
+  }
+  
+  /* Appointment details */
+  .appointment-details {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .appointment-title {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .appointment-client {
+    font-size: 0.8rem;
+    color: #4b5563;
+  }
+  
+  /* Appointment status */
+  .appointment-status {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 9999px;
+    font-weight: 500;
+  }
+  
+  .appointment-status-scheduled {
+    background-color: #dbeafe;
+    color: #1e40af;
+  }
+  
+  .appointment-status-confirmed {
+    background-color: #d1fae5;
+    color: #065f46;
+  }
+  
+  .appointment-status-completed {
+    background-color: #e0e7ff;
+    color: #3730a3;
+  }
+  
+  .appointment-status-canceled {
+    background-color: #fee2e2;
+    color: #b91c1c;
+  }
+  
+  /* Appointment actions */
+  .appointment-actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  
+  .appointment-action {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .appointment-action-video {
+    background-color: #4f46e5;
+    color: white;
+  }
+  
+  .appointment-action-video:hover {
+    background-color: #4338ca;
+  }
+  
+  .appointment-action-client {
+    background-color: #0ea5e9;
+    color: white;
+  }
+  
+  .appointment-action-client:hover {
+    background-color: #0284c7;
+  }
+  
+  .appointment-action-details {
+    background-color: #f3f4f6;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .appointment-action-details:hover {
+    background-color: #e5e7eb;
+  }
+  
   /* Modal styling enhancements */
   .bg-white.rounded-lg.shadow-lg {
     border-radius: 12px !important;
@@ -162,4 +373,252 @@
   
   input:checked + .slider:before {
     transform: translateX(24px);
+  }
+
+  /* Calendar page container */
+.calendar-page-container {
+    position: relative;
+    min-height: calc(100vh - 120px);
+  }
+  
+  /* Calendar control panel */
+  .calendar-control-panel {
+    position: fixed;
+    top: 70px; /* Adjust based on your header height */
+    right: 0;
+    bottom: 0;
+    width: 380px;
+    background-color: white;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .calendar-control-panel.closed {
+    transform: translateX(calc(100% - 30px));
+  }
+  
+  .calendar-control-panel.open {
+    transform: translateX(0);
+  }
+  
+  /* Toggle button */
+  .calendar-panel-toggle {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) translateX(-50%);
+    width: 30px;
+    height: 30px;
+    background-color: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 41;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Panel content */
+  .calendar-panel-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    overflow-y: auto;
+  }
+  
+  .calendar-panel-header {
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 15px;
+  }
+  
+  /* Panel tabs */
+  .calendar-panel-tabs {
+    display: flex;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 15px;
+  }
+  
+  .calendar-panel-tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: 500;
+    color: #6b7280;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+  }
+  
+  .calendar-panel-tab.active {
+    color: #4f46e5;
+    border-bottom-color: #4f46e5;
+  }
+  
+  .calendar-panel-tab-content {
+    flex: 1;
+    overflow-y: auto;
+  }
+  
+  /* Make main calendar adjust when panel is open */
+  @media (min-width: 1024px) {
+    .calendar-main-container {
+      transition: padding-right 0.3s ease;
+    }
+    
+    .calendar-control-panel.open + .calendar-main-container {
+      padding-right: 380px;
+    }
+  }
+
+  /* Add to packages/frontend/src/components/calendar/Calendar.css */
+
+/* Enhanced hover effect for calendar days with an expanded view */
+.calendar-day-cell {
+    position: relative;
+  }
+  
+  .calendar-day-cell:hover .expanded-day-view {
+    display: block;
+    opacity: 1;
+  }
+  
+  .expanded-day-view {
+    display: none;
+    opacity: 0;
+    position: absolute;
+    z-index: 100;
+    top: 0;
+    left: 100%;
+    width: 280px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    transition: opacity 0.2s ease;
+    border: 1px solid #e5e7eb;
+  }
+  
+  /* For days on the right edge of the calendar, show expanded view on the left side */
+  .calendar-day-cell:nth-child(7n+7) .expanded-day-view,
+  .calendar-day-cell:nth-child(7n+6) .expanded-day-view {
+    left: auto;
+    right: 100%;
+  }
+  
+  .expanded-day-title {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+    color: #4b5563;
+  }
+  
+  .expanded-appointment-list {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  .expanded-appointment-item {
+    padding: 8px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+  }
+  
+  .expanded-appointment-item:hover {
+    background-color: #f9fafb;
+  }
+  
+  .expanded-appointment-time {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #4b5563;
+  }
+  
+  .expanded-appointment-client {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 4px 0;
+  }
+  
+  .expanded-appointment-type {
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 4px;
+  }
+  
+  .expanded-appointment-type.emdr {
+    background-color: rgba(79, 70, 229, 0.1);
+    color: #4338ca;
+  }
+  
+  .expanded-appointment-type.standard {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #047857;
+  }
+  
+  .expanded-appointment-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  
+  .expanded-appointment-btn {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    flex: 1;
+    text-align: center;
+    transition: all 0.15s ease;
+    border: 1px solid transparent;
+  }
+  
+  .expanded-appointment-btn.join {
+    background-color: #4f46e5;
+    color: white;
+  }
+  
+  .expanded-appointment-btn.join:hover {
+    background-color: #4338ca;
+  }
+  
+  .expanded-appointment-btn.profile {
+    background-color: #f3f4f6;
+    border-color: #d1d5db;
+    color: #4b5563;
+  }
+  
+  .expanded-appointment-btn.profile:hover {
+    background-color: #e5e7eb;
+  }
+  
+  .no-appointments {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    font-style: italic;
+    text-align: center;
+    padding: 12px 0;
+  }
+  
+  /* Make expanded day responsive on mobile */
+  @media (max-width: 640px) {
+    .expanded-day-view {
+      width: 280px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
   }

@@ -10,20 +10,20 @@ interface SidebarProps {
   onToggle?: (collapsed: boolean) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ 
-  collapsed: externalCollapsed, 
-  onToggle 
+const Sidebar: React.FC<SidebarProps> = ({
+  collapsed: externalCollapsed,
+  onToggle
 }) => {
   const { user } = useAuth();
   const location = useLocation();
   // Use internal state if no external state is provided
   const [internalCollapsed, setInternalCollapsed] = useState(false);
-  
+
   // Determine which collapsed state to use
   const collapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
-  
+
   if (!user) return null;
-  
+
   const isActive = (path: string) => location.pathname.startsWith(path);
 
   const icons = {
@@ -32,9 +32,10 @@ const Sidebar: React.FC<SidebarProps> = ({
     sessions: '📅',
     tools: '🧰',
     profile: '👤',
-    appointments: '📆'
+    appointments: '📆',
+    calendar: '📅'
   };
-  
+
   // Handle toggle
   const handleToggle = () => {
     if (onToggle) {
@@ -43,7 +44,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       setInternalCollapsed(!internalCollapsed);
     }
   };
-  
+
   return (
     <div style={{
       position: 'fixed',
@@ -63,30 +64,30 @@ const Sidebar: React.FC<SidebarProps> = ({
     }}>
       {/* User profile section */}
       {!collapsed && (
-        <div style={{ 
-          marginBottom: '10px', 
+        <div style={{
+          marginBottom: '10px',
           padding: '5px 10px',
-          textAlign: 'center' 
+          textAlign: 'center'
         }}>
           <div>skordi@uci.edu</div>
           <div style={{ fontWeight: 'bold' }}>THERAPIST</div>
         </div>
       )}
-      
+
       {/* Navigation links */}
-      <div style={{ 
+      <div style={{
         flex: '1 0 auto',
-        padding: collapsed ? '5px' : '10px' 
+        padding: collapsed ? '5px' : '10px'
       }}>
-        <ul style={{ 
-          listStyle: 'none', 
-          padding: 0, 
+        <ul style={{
+          listStyle: 'none',
+          padding: 0,
           margin: 0
         }}>
           <li style={{ marginBottom: '5px' }}>
-            <Link to="/therapist" style={{ 
+            <Link to="/therapist" style={{
               display: 'flex',
-              alignItems: 'center', 
+              alignItems: 'center',
               color: 'white',
               textDecoration: 'none',
               padding: collapsed ? '10px 5px' : '10px',
@@ -98,9 +99,9 @@ const Sidebar: React.FC<SidebarProps> = ({
             </Link>
           </li>
           <li style={{ marginBottom: '5px' }}>
-            <Link to="/therapist/clients" style={{ 
+            <Link to="/therapist/clients" style={{
               display: 'flex',
-              alignItems: 'center', 
+              alignItems: 'center',
               color: 'white',
               textDecoration: 'none',
               padding: collapsed ? '10px 5px' : '10px',
@@ -112,9 +113,9 @@ const Sidebar: React.FC<SidebarProps> = ({
             </Link>
           </li>
           <li style={{ marginBottom: '5px' }}>
-            <Link to="/therapist/sessions" style={{ 
+            <Link to="/therapist/sessions" style={{
               display: 'flex',
-              alignItems: 'center', 
+              alignItems: 'center',
               color: 'white',
               textDecoration: 'none',
               padding: collapsed ? '10px 5px' : '10px',
@@ -126,9 +127,9 @@ const Sidebar: React.FC<SidebarProps> = ({
             </Link>
           </li>
           <li style={{ marginBottom: '5px' }}>
-            <Link to="/therapist/tools" style={{ 
+            <Link to="/therapist/tools" style={{
               display: 'flex',
-              alignItems: 'center', 
+              alignItems: 'center',
               color: 'white',
               textDecoration: 'none',
               padding: collapsed ? '10px 5px' : '10px',
@@ -140,9 +141,9 @@ const Sidebar: React.FC<SidebarProps> = ({
             </Link>
           </li>
           <li style={{ marginBottom: '5px' }}>
-            <Link to="/therapist/profile" style={{ 
+            <Link to="/therapist/profile" style={{
               display: 'flex',
-              alignItems: 'center', 
+              alignItems: 'center',
               color: 'white',
               textDecoration: 'none',
               padding: collapsed ? '10px 5px' : '10px',
@@ -153,22 +154,22 @@ const Sidebar: React.FC<SidebarProps> = ({
               {!collapsed && <span style={{ marginLeft: '10px' }}>Profile</span>}
             </Link>
           </li>
-          <li style={{ marginBottom: '20px' }}> {/* Added extra margin for spacing */}
-            <Link to="/therapist/appointments" style={{ 
+          <li style={{ marginBottom: '5px' }}>
+            <Link to="/therapist/calendar" style={{
               display: 'flex',
-              alignItems: 'center', 
+              alignItems: 'center',
               color: 'white',
               textDecoration: 'none',
               padding: collapsed ? '10px 5px' : '10px',
               borderRadius: '4px',
               justifyContent: collapsed ? 'center' : 'flex-start'
             }}>
-              <span style={{ fontSize: '20px' }}>{icons.appointments}</span>
-              {!collapsed && <span style={{ marginLeft: '10px' }}>Appointments</span>}
+              <span style={{ fontSize: '20px' }}>{icons.calendar}</span>
+              {!collapsed && <span style={{ marginLeft: '10px' }}>Calendar</span>}
             </Link>
           </li>
         </ul>
-        
+
         {/* Toggle button moved below the navigation links */}
         <div style={{
           display: 'flex',
@@ -198,7 +199,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
       </div>
-      
+
       {/* Footer */}
       <div style={{
         padding: collapsed ? '10px 5px' : '10px',

@@ -1,5 +1,6 @@
 // packages/frontend/src/components/calendar/Calendar.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCalendar, Appointment } from '../../context/CalendarContext';
 import './Calendar.css';
@@ -116,6 +117,23 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
             </p>
           </div>
           
+          {/* Status selection (for therapist only) */}
+          {userRole === 'THERAPIST' && appointment.status !== 'CANCELED' && (
+            <div className="mb-4">
+              <h4 className="font-medium mb-1">Status</h4>
+              <select
+                value={status}
+                onChange={e => setStatus(e.target.value)}
+                className="w-full p-2 border rounded"
+              >
+                <option value="SCHEDULED">Scheduled</option>
+                <option value="CONFIRMED">Confirmed</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="NO_SHOW">No Show</option>
+              </select>
+            </div>
+          )}
+          
           {/* Notes section */}
           <div className="mb-4">
             <h4 className="font-medium mb-1">Notes</h4>
@@ -193,6 +211,7 @@ const Calendar: React.FC = () => {
     setSelectedDate 
   } = useCalendar();
   
+  const navigate = useNavigate();
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [showModal, setShowModal] = useState(false);
 
@@ -270,7 +289,7 @@ const Calendar: React.FC = () => {
         >
           <div className="day-number">{day}</div>
           <div className="appointments-container">
-            {dayAppointments.map(appointment => (
+            {dayAppointments.slice(0, 3).map(appointment => (
               <div 
                 key={appointment.id}
                 className={`appointment-item ${
@@ -289,7 +308,81 @@ const Calendar: React.FC = () => {
                   : appointment.therapist?.user.firstName}
               </div>
             ))}
+            
+            {dayAppointments.length > 3 && (
+              <div className="text-xs text-gray-500 text-center mt-1">
+                +{dayAppointments.length - 3} more
+              </div>
+            )}
           </div>
+          
+          {/* Expanded view on hover */}
+          {dayAppointments.length > 0 && (
+            <div className="expanded-day-view">
+              <div className="expanded-day-title">
+                {new Date(selectedDate.getFullYear(), selectedDate.getMonth(), day).toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </div>
+              <div className="expanded-appointment-list">
+                {dayAppointments.map(appointment => (
+                  <div key={appointment.id} className="expanded-appointment-item">
+                    <div className="expanded-appointment-time">
+                      {new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {' - '}
+                      {new Date(appointment.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    <div className="expanded-appointment-client">
+                      {user?.role === 'THERAPIST' 
+                        ? `${appointment.client?.user.firstName} ${appointment.client?.user.lastName || ''}`
+                        : `${appointment.therapist?.user.firstName} ${appointment.therapist?.user.lastName || ''}`}
+                    </div>
+                    <div 
+                      className={`expanded-appointment-type ${
+                        appointment.type === 'EMDR' ? 'emdr' : 'standard'
+                      }`}
+                    >
+                      {appointment.type}
+                    </div>
+                    {appointment.status !== 'CANCELED' && (
+                      <div className="expanded-appointment-actions">
+                        <button 
+                          className="expanded-appointment-btn join"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent opening modal
+                            // Navigate to video session
+                            navigate(`/therapist/session/${appointment.id}`);
+                          }}
+                        >
+                          Join Session
+                        </button>
+                        <button 
+                          className="expanded-appointment-btn profile"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent opening modal
+                            // Navigate to client profile
+                            const profileId = user?.role === 'THERAPIST' 
+                              ? appointment.clientId
+                              : appointment.therapistId;
+                            navigate(`/${user?.role.toLowerCase()}/profile/${profileId}`);
+                          }}
+                        >
+                          View Profile
+                        </button>
+                      </div>
+                    )}
+                    {appointment.status === 'CANCELED' && (
+                      <div className="text-xs text-red-500 font-medium mt-2">
+                        Session Canceled
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       );
     }

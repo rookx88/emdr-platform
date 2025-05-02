@@ -21,7 +21,7 @@ import ClientDashboard from '../pages/client/Dashboard';
 import SessionPage from '../pages/therapist/SessionPage'; // Import the new SessionPage
 
 // Appointment pages
-import TherapistAppointmentsPage from '../pages/therapist/AppointmentsPage';
+
 import ClientAppointmentsPage from '../pages/client/AppointmentsPage';
 
 // Other pages
@@ -29,7 +29,10 @@ import NotFound from '../pages/NotFound';
 import Unauthorized from '../pages/Unauthorized';
 
 import ErrorBoundary from '../components/common/ErrorBoundary';
+
+// Calendar pages
 import { CalendarProvider } from '../context/CalendarContext';
+import CalendarPage from '../pages/therapist/CalendarPage';
 const AppRouter: React.FC = () => {
   return (
     <Router>
@@ -65,13 +68,13 @@ const AppRouter: React.FC = () => {
               }
             />
             <Route
-              path="/therapist/appointments"
-              element={
-                <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
-                  <TherapistAppointmentsPage />
-                </ProtectedRoute>
-              }
-            />
+  path="/therapist/calendar"
+  element={
+    <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
+      <CalendarPage />
+    </ProtectedRoute>
+  }
+/>
 
             <Route
               path="/client/appointments"
@@ -91,7 +94,7 @@ const AppRouter: React.FC = () => {
               }
             />
 
-            {/* Remove or modify the role-based redirect since we now have a landing page */}
+            
             {/* The RoleBasedRedirect will only be used after login */}
             <Route
               path="/dashboard"
