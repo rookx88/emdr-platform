@@ -34,6 +34,7 @@ import ErrorBoundary from '../components/common/ErrorBoundary';
 import { CalendarProvider } from '../context/CalendarContext';
 import CalendarPage from '../pages/therapist/CalendarPage';
 import ClientsPage from '../pages/therapist/ClientsPage';
+import ClientProfilePage from '../pages/client/ProfilePage';
 import ClientFormPage from '../pages/therapist/ClientformPage';
 import ClientDetailPage from '../pages/therapist/ClientDetailPage';
 const AppRouter: React.FC = () => {
@@ -84,6 +85,14 @@ const AppRouter: React.FC = () => {
                 element={
                   <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
                     <ClientsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/client/profile"
+                element={
+                  <ProtectedRoute allowedRoles={[Role.CLIENT]}>
+                    <ClientProfilePage />
                   </ProtectedRoute>
                 }
               />
