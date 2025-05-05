@@ -37,6 +37,7 @@ import ClientsPage from '../pages/therapist/ClientsPage';
 import ClientProfilePage from '../pages/client/ProfilePage';
 import ClientFormPage from '../pages/therapist/ClientformPage';
 import ClientDetailPage from '../pages/therapist/ClientDetailPage';
+import DashboardLayout from '../layouts/DashBoardLayout';
 const AppRouter: React.FC = () => {
   return (
     <Router>
@@ -54,13 +55,15 @@ const AppRouter: React.FC = () => {
 
               {/* Protected routes */}
               <Route
-                path="/therapist"
-                element={
-                  <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
-                    <TherapistDashboard />
-                  </ProtectedRoute>
-                }
-              />
+  path="/therapist"
+  element={
+    <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
+      <DashboardLayout fullWidth={true}>
+        <TherapistDashboard />
+      </DashboardLayout>
+    </ProtectedRoute>
+  }
+/>
 
               {/* New route for therapy sessions */}
               <Route

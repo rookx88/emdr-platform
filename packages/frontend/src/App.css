@@ -103,3 +103,20 @@ body {
   z-index: 999 !important; /* Very high z-index */
   box-shadow: 0 0 5px rgba(0,0,0,0.5);
 }
+
+.dashboard-container {
+  position: relative;
+  min-height: 100vh;
+  background-color: #f9fafb;
+}
+
+.right-sidebar {
+  position: relative;
+  min-height: 100vh;
+  overflow-y: auto;
+  box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+} 
+
+.calendar-day-view .upcoming-event {
+  border-left: 4px solid #f59e0b;
+}

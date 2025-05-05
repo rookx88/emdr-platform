@@ -8,11 +8,13 @@ import Footer from '../components/common/Footer';
 interface DashboardLayoutProps {
   children: React.ReactNode;
   fullWidth?: boolean; // Add this prop for pages that need full width
+  noSidebar?: boolean; // Add this to completely hide the sidebar
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ 
   children, 
-  fullWidth = false 
+  fullWidth = false,
+  noSidebar = false
 }) => {
   const { user } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -42,22 +44,22 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       backgroundColor: '#f9fafb'  // Light gray background
     }}>
       <Navbar />
-      <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
+      {!noSidebar && <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />}
       
       <main style={{
-        marginLeft: sidebarCollapsed ? '60px' : '200px',
+        marginLeft: noSidebar ? '0' : (sidebarCollapsed ? '60px' : '200px'),
         marginTop: '50px',  // Match navbar height
-        padding: '20px',
+        padding: noSidebar ? '0' : '20px',
         transition: 'margin-left 0.3s ease',
         flexGrow: 1,
-        width: fullWidth ? 'calc(100% - ' + (sidebarCollapsed ? '60px' : '200px') + ')' : 'auto'
+        width: fullWidth || noSidebar ? '100%' : 'auto'
       }}>
-        <div className={fullWidth ? 'full-width-content' : 'standard-content'}>
+        <div className={fullWidth || noSidebar ? 'full-width-content' : 'standard-content'}>
           {children}
         </div>
       </main>
       
-      <Footer />
+      {!noSidebar && <Footer />}
     </div>
   );
 };

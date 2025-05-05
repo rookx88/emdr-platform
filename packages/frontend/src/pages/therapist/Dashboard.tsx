@@ -1,200 +1,212 @@
-// src/pages/therapist/Dashboard.tsx
+// packages/frontend/src/pages/therapist/Dashboard.tsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
 const TherapistDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [stats, setStats] = useState({
-    activeClients: 0,
-    upcomingSessions: 0,
-    completedSessions: 0,
-    pendingTasks: 0
-  });
-  const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [nextSession, setNextSession] = useState<any>(null);
+  const [specialtyUpdates, setSpecialtyUpdates] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [prepAreaContent, setPrepAreaContent] = useState<React.ReactNode | null>(null);
   
-  // Simulated data loading - would be replaced with actual API calls
+  // Get appropriate greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+  };
+
   useEffect(() => {
-    // Mock data fetch
-    const fetchData = () => {
-      setStats({
-        activeClients: 12,
-        upcomingSessions: 5,
-        completedSessions: 45,
-        pendingTasks: 3
-      });
-    };
-    
-    fetchData();
+    fetchDashboardData();
   }, []);
   
-  const upcomingSessions = [
-    { id: 1, client: 'Jane Doe', date: '2025-04-27T14:00:00', type: 'EMDR' },
-    { id: 2, client: 'John Smith', date: '2025-04-28T10:30:00', type: 'Assessment' },
-    { id: 3, client: 'Anna Johnson', date: '2025-04-29T15:45:00', type: 'EMDR' },
-  ];
-  
-  // Function to create a test session
-  // Updated createTestSession function for TherapistDashboard.tsx
-  const createTestSession = async () => {
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      setIsCreatingSession(true);
-      
-      console.log('Making API request to create session...');
-      
-      // Use your API service which already handles auth correctly
-      const response = await api.post('/sessions', {
-        title: `Test Session ${new Date().toLocaleTimeString()}`,
-        scheduledAt: new Date().toISOString(),
-        sessionType: 'EMDR'
+      // Fetch next session data
+      const response = await api.get('/appointments', {
+        params: {
+          startDate: new Date().toISOString(),
+          status: 'SCHEDULED,CONFIRMED',
+          limit: 1
+        }
       });
       
-      console.log('Session created successfully:', response.data);
+      if (response.data && response.data.length > 0) {
+        setNextSession(response.data[0]);
+      }
       
-      // Navigate to the new session
-      navigate(`/therapist/session/${response.data.id}`);
-    } catch (error: any) {
-      console.error('Failed to create test session:', error);
-      // Show more detailed error information
-      alert(`Failed to create session: ${error.response?.data?.message || error.message}`);
+      // Fetch specialty updates - this would be replaced with actual API integration
+      setSpecialtyUpdates([
+        {
+          id: 1,
+          source: "EMDR International",
+          title: "New research shows EMDR therapy effectiveness for trauma treatment",
+          content: "Recent studies confirm bilateral stimulation continues to show positive outcomes in PTSD treatment.",
+          date: new Date()
+        },
+        {
+          id: 2,
+          source: "Trauma Research Center",
+          title: "Bilateral stimulation techniques show promising results",
+          content: "Clinical trials demonstrate significant improvement in anxiety reduction using modern EMDR approaches.",
+          date: new Date()
+        }
+      ]);
+      
+    } catch (err: any) {
+      console.error('Failed to fetch dashboard data:', err);
+      setError(err.response?.data?.message || 'Failed to load dashboard information');
     } finally {
-      setIsCreatingSession(false);
+      setLoading(false);
     }
   };
   
+  const handlePrepClick = () => {
+    if (!nextSession) return;
+    
+    // Load client recap info into prep area
+    setPrepAreaContent(
+      <div className="client-recap p-6">
+        <h3 className="text-xl font-semibold mb-4">Session Preparation</h3>
+        <div className="client-info mb-4">
+          <h4 className="text-lg font-medium">Client: {nextSession.client?.user.firstName} {nextSession.client?.user.lastName}</h4>
+          <p className="text-gray-600">Last session: {new Date(nextSession.startTime).toLocaleDateString()}</p>
+        </div>
+        <div className="session-notes">
+          <h4 className="text-md font-medium mb-2">Previous Session Notes:</h4>
+          <p className="text-gray-700 bg-gray-50 p-3 rounded">
+            Client reported reduced anxiety levels. Continued work on bilateral stimulation exercises.
+            Homework completed. Ready to proceed to next phase of treatment.
+          </p>
+        </div>
+      </div>
+    );
+  };
+  
+  // Format time for display
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-6">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+  
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold text-gray-900">Hello Sammy, welcome back!</h1>
-        <div className="text-sm text-gray-600">
-          Welcome back, {user?.firstName || user?.email}
-        </div>
-      </div>
-      
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-500">Active Clients</div>
-          <div className="mt-2 text-3xl font-semibold text-indigo-600">{stats.activeClients}</div>
+    <div className="flex">
+      {/* Main Content Area */}
+      <div className="flex-grow mr-4">
+        {/* Header with greeting */}
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">
+          {getGreeting()}, {user?.firstName || 'Therapist'}
+        </h1>
+        
+        {/* Specialty Updates Section - Purple area in mockup */}
+        <div className="bg-purple-500 rounded-lg p-4 mb-6">
+          <h2 className="text-lg font-semibold text-white mb-2">Latest in EMDR Therapy</h2>
+          <div className="space-y-3">
+            {specialtyUpdates.map(update => (
+              <div key={update.id} className="bg-purple-300 bg-opacity-50 p-3 rounded">
+                <h3 className="font-medium text-white">{update.title}</h3>
+                <p className="text-white mt-1">{update.content}</p>
+                <p className="text-sm text-purple-100 mt-1">Source: {update.source}</p>
+              </div>
+            ))}
+          </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-500">Upcoming Sessions</div>
-          <div className="mt-2 text-3xl font-semibold text-green-600">{stats.upcomingSessions}</div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-500">Completed Sessions</div>
-          <div className="mt-2 text-3xl font-semibold text-blue-600">{stats.completedSessions}</div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-500">Pending Tasks</div>
-          <div className="mt-2 text-3xl font-semibold text-orange-600">{stats.pendingTasks}</div>
-        </div>
-      </div>
-      
-      {/* Upcoming Sessions */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Upcoming Sessions</h2>
-        </div>
-        
-        <div className="divide-y divide-gray-200">
-          {upcomingSessions.map(session => (
-            <div key={session.id} className="px-6 py-4 flex items-center justify-between">
+        {/* Three Tiles Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {/* Next Session Tile */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+            <h3 className="font-semibold text-gray-800 mb-2">Next Session</h3>
+            {nextSession ? (
               <div>
-                <div className="font-medium text-gray-900">{session.client}</div>
-                <div className="text-sm text-gray-600">
-                  {new Date(session.date).toLocaleString()} • {session.type}
+                <p className="font-medium">{nextSession.client?.user.firstName} {nextSession.client?.user.lastName}</p>
+                <p className="text-gray-600">{formatTime(nextSession.startTime)}</p>
+                <p className="text-gray-600 text-sm mb-2">
+                  (in {Math.round((new Date(nextSession.startTime).getTime() - new Date().getTime()) / 60000)} minutes)
+                </p>
+                <div className="flex mt-2 space-x-2">
+                  <Link
+                    to={`/therapist/session/${nextSession.id}`}
+                    className="px-3 py-1 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700"
+                  >
+                    Join Session
+                  </Link>
+                  <button
+                    onClick={handlePrepClick}
+                    className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-md border border-gray-300 hover:bg-gray-200"
+                  >
+                    Prep
+                  </button>
                 </div>
               </div>
-              <div>
-                <button className="px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-500">
-                  View Details
-                </button>
-              </div>
-            </div>
-          ))}
+            ) : (
+              <p className="text-gray-600">No upcoming sessions</p>
+            )}
+          </div>
           
-          {upcomingSessions.length === 0 && (
-            <div className="px-6 py-4 text-gray-600">
-              No upcoming sessions scheduled.
+          {/* Notifications Tile */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+            <h3 className="font-semibold text-gray-800 mb-2">Notifications</h3>
+            <p className="text-gray-500 text-sm">Coming soon</p>
+          </div>
+          
+          {/* Business Center Tile */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+            <h3 className="font-semibold text-gray-800 mb-2">Business Center</h3>
+            <p className="text-gray-500 text-sm">Coming soon</p>
+          </div>
+        </div>
+        
+        {/* Prep Area (Pink area in mockup) */}
+        <div className="bg-pink-200 rounded-lg p-4 border border-pink-300 min-h-[200px]">
+          {prepAreaContent || (
+            <div className="text-center text-pink-500 py-10">
+              <p>Click "Prep" on your next session to see client information and session notes</p>
             </div>
           )}
         </div>
       </div>
       
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-            <span className="text-2xl mb-2">📝</span>
-            <span className="text-sm font-medium">Schedule Session</span>
-          </button>
-          
-          <button className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-            <span className="text-2xl mb-2">👥</span>
-            <span className="text-sm font-medium">Add New Client</span>
-          </button>
-          
-          <button className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-            <span className="text-2xl mb-2">🧰</span>
-            <span className="text-sm font-medium">EMDR Tools</span>
-          </button>
-          
-          {/* New Test Session Button */}
+      {/* Right Sidebar */}
+      <div className={`bg-yellow-100 w-64 p-4 h-full rounded-lg transition-all duration-300 ${sidebarExpanded ? 'block' : 'hidden'}`}>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Day at a Glance</h2>
           <button 
-            onClick={createTestSession}
-            disabled={isCreatingSession}
-            className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors relative overflow-hidden"
+            onClick={() => setSidebarExpanded(!sidebarExpanded)}
+            className="text-gray-500 hover:text-gray-700"
           >
-            {/* Orange button styling to match login button */}
-            <div className="absolute inset-0 bg-amber-600 opacity-10"></div>
-            <span className="text-2xl mb-2">🧪</span>
-            <span className="text-sm font-medium relative z-10">
-              {isCreatingSession ? 'Creating...' : 'Test Video Session'}
-            </span>
-            {isCreatingSession && (
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <div className="w-5 h-5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            )}
+            {sidebarExpanded ? '→' : '←'}
           </button>
         </div>
-      </div>
-      
-      {/* Call to Action Section */}
-      <div className="bg-gradient-to-r from-amber-500 to-amber-700 rounded-lg shadow-lg p-6 text-white">
-        <div className="sm:flex sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-xl font-semibold">Ready to test the EMDR video system?</h3>
-            <p className="mt-2 text-amber-100">Create a test session to explore the video interface, bilateral stimulation tools, and note-taking features.</p>
-          </div>
-          <div className="mt-4 sm:mt-0">
-            <button
-              onClick={createTestSession}
-              disabled={isCreatingSession}
-              className="inline-flex items-center px-4 py-2 border border-white bg-white text-amber-600 text-sm font-medium rounded-md shadow-sm hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-amber-600 focus:ring-white"
-            >
-              {isCreatingSession ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Creating Session...
-                </>
-              ) : (
-                'Start Test Session'
-              )}
-            </button>
-          </div>
+        
+        <div className="mb-4">
+          <h3 className="font-medium text-gray-700">Monday, May 5</h3>
+          <p className="text-sm text-gray-600 mt-2">No appointments scheduled for today</p>
+        </div>
+        
+        <div>
+          <h3 className="text-lg font-bold mb-2">Priority Items</h3>
+          <p className="text-gray-600 text-sm">Coming soon</p>
         </div>
       </div>
     </div>
