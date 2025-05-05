@@ -199,10 +199,12 @@ export const appointmentService = {
 
       if (client) {
         // Get appointments where this user is the client
+        // Modified to use enum types correctly
         appointments = await prisma.appointment.findMany({
           where: {
             clientId: client.id,
-            ...filter
+            ...filter 
+            // The filter will now handle the status properly
           },
           include: {
             therapist: {
@@ -289,3 +291,5 @@ export const appointmentService = {
     };
   }
 };
+
+export default appointmentService;

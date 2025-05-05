@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../lib/prisma';
 import { createAuditLog } from '../utils/auditLog';
 import { appointmentService } from '../services/appointmentService';
+import { AppointmentStatus } from '@prisma/client';
 
 export const appointmentController = {
   async createAppointment(req: Request, res: Response, next: NextFunction) {
@@ -91,9 +92,20 @@ export const appointmentController = {
         filter.startTime = dateFilter;
       }
       
-      // Add status filter if present
+      // Add status filter if present - MODIFIED TO HANDLE ENUM VALUES
       if (status) {
-        filter.status = status;
+        // Handle comma-separated status values
+        const statusValues = (status as string).split(',');
+        
+        // Validate that these are actual AppointmentStatus enum values
+        const validStatusValues = statusValues.filter(s => 
+          Object.values(AppointmentStatus).includes(s as AppointmentStatus)
+        );
+        
+        if (validStatusValues.length > 0) {
+          // Apply as an 'in' filter for multiple values
+          filter.status = { in: validStatusValues };
+        }
       }
 
       // Get appointments based on user role and permissions
@@ -363,7 +375,14 @@ export const appointmentController = {
       
       // Add status filter if present
       if (status) {
-        filter.status = status;
+        // Check if status is a single string or an array
+        if (typeof status === 'string') {
+          // For a single status value (most common case)
+          filter.status = status;
+        } else if (Array.isArray(status)) {
+          // For multiple status values (if array is passed)
+          filter.status = { in: status };
+        }
       }
       
       // Get appointments

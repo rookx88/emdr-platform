@@ -28,17 +28,16 @@ const ClientDashboard: React.FC = () => {
       const profileResponse = await api.get('/clients/me');
       setClientProfile(profileResponse.data);
       
-      // Fetch upcoming appointments
+      // Fetch upcoming appointments - Using enum values instead of 'active'
       const appointmentsResponse = await api.get('/appointments', {
         params: {
           startDate: new Date().toISOString(),
-          status: 'active'
+          status: 'SCHEDULED' // Modified to use valid enum values
         }
       });
       setUpcomingSessions(appointmentsResponse.data);
       
       // Mock data for resources and notifications for now
-      // These would be replaced with actual API calls in production
       setResources([
         { id: 1, title: 'Understanding EMDR Therapy', type: 'Article', isNew: true },
         { id: 2, title: 'Relaxation Techniques', type: 'Video', isNew: false },
