@@ -1,3 +1,4 @@
+// packages/backend/src/routes/clientRoutes.ts
 import express from 'express';
 import { authenticate, requireRole } from '../middlewares/authMiddleware';
 import { clientController } from '../controllers/clientController';
@@ -18,5 +19,14 @@ router.post('/', authenticate, requireRole(['THERAPIST', 'ADMIN']), clientContro
 
 // Update a client
 router.put('/:id', authenticate, clientController.updateClient);
+
+// Delete a client (admin only)
+router.delete('/:id', authenticate, requireRole(['ADMIN']), clientController.deleteClient);
+
+// Restore a client (admin only)
+router.post('/:id/restore', authenticate, requireRole(['ADMIN']), clientController.restoreClient);
+
+// Assign therapist to client
+router.post('/:clientId/assign-therapist', authenticate, requireRole(['THERAPIST', 'ADMIN']), clientController.assignTherapist);
 
 export default router;

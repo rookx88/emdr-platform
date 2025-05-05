@@ -80,5 +80,64 @@ export const clientService = {
         }
       }
     });
+  },
+  
+  
+  async getClientWithDetails(clientId: string): Promise<any> {
+    return prisma.clientProfile.findUnique({
+      where: { id: clientId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            isActive: true,
+            createdAt: true,
+            lastLoginAt: true
+          }
+        },
+        therapist: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true
+              }
+            }
+          }
+        },
+        appointments: {
+          orderBy: {
+            startTime: 'desc'
+          },
+          take: 10
+        }
+      }
+    });
+  },
+  
+  /**
+   * Get recent client activity
+   */
+  async getClientActivity(clientId: string): Promise<any> {
+    // Find client user ID first
+    const client = await prisma.clientProfile.findUnique({
+      where: { id: clientId },
+      select: { userId: true }
+    });
+    
+    if (!client) return [];
+    
+    // Get user activity
+    return prisma.userActivity.findMany({
+      where: { userId: client.userId },
+      orderBy: { timestamp: 'desc' },
+      take: 20
+    });
   }
 };

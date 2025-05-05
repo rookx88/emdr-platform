@@ -33,77 +33,117 @@ import ErrorBoundary from '../components/common/ErrorBoundary';
 // Calendar pages
 import { CalendarProvider } from '../context/CalendarContext';
 import CalendarPage from '../pages/therapist/CalendarPage';
+import ClientsPage from '../pages/therapist/ClientsPage';
+import ClientFormPage from '../pages/therapist/ClientformPage';
+import ClientDetailPage from '../pages/therapist/ClientDetailPage';
 const AppRouter: React.FC = () => {
   return (
     <Router>
       <ErrorBoundary>
         <AuthProvider>
           <CalendarProvider>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
-            <Route path="/unauthorized" element={<Unauthorized />} />
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Landing />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+              <Route path="/unauthorized" element={<Unauthorized />} />
 
-            {/* Protected routes */}
-            <Route
-              path="/therapist"
-              element={
-                <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
-                  <TherapistDashboard />
-                </ProtectedRoute>
-              }
-            />
+              {/* Protected routes */}
+              <Route
+                path="/therapist"
+                element={
+                  <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
+                    <TherapistDashboard />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* New route for therapy sessions */}
-            <Route
-              path="/therapist/session/:sessionId"
-              element={
-                <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]} noLayout={true}>
-                  <SessionPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-  path="/therapist/calendar"
-  element={
-    <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
-      <CalendarPage />
-    </ProtectedRoute>
-  }
-/>
+              {/* New route for therapy sessions */}
+              <Route
+                path="/therapist/session/:sessionId"
+                element={
+                  <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]} noLayout={true}>
+                    <SessionPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/therapist/calendar"
+                element={
+                  <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
+                    <CalendarPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/client/appointments"
-              element={
-                <ProtectedRoute allowedRoles={[Role.CLIENT]}>
-                  <ClientAppointmentsPage />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/therapist/clients"
+                element={
+                  <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
+                    <ClientsPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/client"
-              element={
-                <ProtectedRoute allowedRoles={[Role.CLIENT]}>
-                  <ClientDashboard />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/therapist/clients/new"
+                element={
+                  <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
+                    <ClientFormPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            
-            {/* The RoleBasedRedirect will only be used after login */}
-            <Route
-              path="/dashboard"
-              element={<RoleBasedRedirect />}
-            />
+              <Route
+                path="/therapist/clients/:id"
+                element={
+                  <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
+                    <ClientDetailPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* 404 Not Found */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              <Route
+                path="/therapist/clients/:id/edit"
+                element={
+                  <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
+                    <ClientFormPage />
+                  </ProtectedRoute>
+                }
+              />
+
+
+              <Route
+                path="/client/appointments"
+                element={
+                  <ProtectedRoute allowedRoles={[Role.CLIENT]}>
+                    <ClientAppointmentsPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/client"
+                element={
+                  <ProtectedRoute allowedRoles={[Role.CLIENT]}>
+                    <ClientDashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+
+              {/* The RoleBasedRedirect will only be used after login */}
+              <Route
+                path="/dashboard"
+                element={<RoleBasedRedirect />}
+              />
+
+              {/* 404 Path */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </CalendarProvider>
         </AuthProvider>
       </ErrorBoundary>
