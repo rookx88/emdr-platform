@@ -2,6 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../lib/prisma';
 import { createAuditLog } from '../utils/auditLog';
 import { clientService } from '../services/clientService';
+import crypto from 'crypto';
+import bcrypt from 'bcrypt';
+import { emailService } from '../services/emailService';
 
 export const clientController = {
   // Get all clients (for therapists and admins)
@@ -532,6 +535,172 @@ export const clientController = {
       next(error);
     }
   },
+
+  // Invite client
+  async inviteClient(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { 
+        email, 
+        firstName, 
+        lastName, 
+        phoneNumber, 
+        sendWelcomeEmail,
+        session 
+      } = req.body;
+      
+      const { userId, role } = req.user!;
+      
+      // Check if email already exists
+      const existingUser = await prisma.user.findUnique({
+        where: { email }
+      });
+      
+      if (existingUser) {
+        return res.status(409).json({ 
+          message: 'A user with this email already exists' 
+        });
+      }
+      
+      // Determine therapist ID based on role
+      let therapistId: string | null = null;
+      
+      if (role === 'THERAPIST') {
+        // Get therapist's own profile
+        const therapistProfile = await prisma.therapistProfile.findFirst({
+          where: { userId }
+        });
+        
+        if (!therapistProfile) {
+          return res.status(400).json({ 
+            message: 'Therapist profile not found'
+          });
+        }
+        
+        therapistId = therapistProfile.id;
+      } else if (role === 'ADMIN') {
+        // Admin should provide therapistId if needed
+        therapistId = req.body.therapistId || null;
+      }
+      
+      // Generate a secure invitation token
+      const inviteToken = crypto.randomBytes(32).toString('hex');
+      const tokenExpiry = new Date();
+      tokenExpiry.setDate(tokenExpiry.getDate() + 7); // Token valid for 7 days
+      
+      // Create everything in a transaction
+      const result = await prisma.$transaction(async (prisma) => {
+        // Create user with temporary password
+        const passwordHash = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 12);
+        
+        const user = await prisma.user.create({
+          data: {
+            email,
+            passwordHash,
+            firstName,
+            lastName,
+            role: 'CLIENT',
+            // Mark as inactive until they complete signup
+            isActive: false
+          }
+        });
+        
+        // Create client profile
+        const clientProfile = await prisma.clientProfile.create({
+          data: {
+            userId: user.id,
+            phoneNumber,
+            therapistId
+          }
+        });
+        
+        // Store the invitation token
+        await prisma.invitationToken.create({
+          data: {
+            token: inviteToken,
+            userId: user.id,
+            expiresAt: tokenExpiry,
+            isActive: true
+          }
+        });
+        
+        // Create initial session if requested
+        let createdSession = null;
+        if (session) {
+          const { date, time, type, notes } = session;
+          
+          if (!therapistId) {
+            throw new Error('Cannot schedule session without a therapist assignment');
+          }
+          
+          // Combine date and time
+          const scheduledAt = new Date(`${date}T${time}`);
+          
+          // Calculate end time (default 50 min session)
+          const duration = 50; // minutes
+          const endTime = new Date(scheduledAt);
+          endTime.setMinutes(endTime.getMinutes() + duration);
+          
+          createdSession = await prisma.appointment.create({
+            data: {
+              title: `${type} Session with ${firstName || 'New Client'}`,
+              startTime: scheduledAt,
+              endTime: endTime,
+              status: 'SCHEDULED',
+              type: type,
+              notes: notes,
+              clientId: clientProfile.id,
+              therapistId: therapistId,
+              isVirtual: true
+            }
+          });
+        }
+        
+        return { user, clientProfile, inviteToken, session: createdSession };
+      });
+      
+      // Send welcome email with invite link
+      if (sendWelcomeEmail) {
+        await emailService.sendClientInvitation({
+          to: email,
+          clientName: firstName || 'Client',
+          inviteToken: result.inviteToken,
+          therapistName: await getTherapistName(therapistId),
+          sessionDetails: result.session ? {
+            date: new Date(result.session.startTime).toLocaleDateString(),
+            time: new Date(result.session.startTime).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit'
+            }),
+            type: result.session.type
+          } : null
+        });
+      }
+      
+      // Log the invitation
+      await createAuditLog(
+        userId,
+        'INVITE_CLIENT',
+        'ClientProfile',
+        result.clientProfile.id,
+        { 
+          email,
+          hasSession: !!result.session,
+          tokenGenerated: true
+        }
+      );
+      
+      // Return success but hide the actual token for security
+      res.status(201).json({
+        message: 'Client invitation sent successfully',
+        clientId: result.clientProfile.id,
+        inviteSent: sendWelcomeEmail,
+        expiryDate: tokenExpiry
+      });
+      
+    } catch (error) {
+      next(error);
+    }
+  },
   
   // Assign therapist to client
   async assignTherapist(req: Request, res: Response, next: NextFunction) {
@@ -612,3 +781,24 @@ export const clientController = {
     }
   }
 };
+
+// Helper function to get therapist name
+async function getTherapistName(therapistId: string | null): Promise<string> {
+  if (!therapistId) return 'Your therapist';
+  
+  const therapist = await prisma.therapistProfile.findUnique({
+    where: { id: therapistId },
+    include: {
+      user: {
+        select: {
+          firstName: true,
+          lastName: true
+        }
+      }
+    }
+  });
+  
+  if (!therapist || !therapist.user) return 'Your therapist';
+  
+  return `${therapist.user.firstName || ''} ${therapist.user.lastName || ''}`.trim() || 'Your therapist';
+}

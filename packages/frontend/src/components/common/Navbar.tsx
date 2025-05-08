@@ -3,7 +3,11 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const Navbar = () => {
+interface NavbarProps {
+  isLanding?: boolean;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ isLanding = false }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   
@@ -36,9 +40,19 @@ const Navbar = () => {
         }}>
           EMDR Therapy Platform
         </Link>
+        
+        {isLanding && (
+          <div style={{ marginLeft: '20px', display: 'flex', gap: '15px' }}>
+            <Link to="/features" style={{ textDecoration: 'none', color: '#4b5563', fontSize: '14px' }}>Features</Link>
+            <Link to="/about" style={{ textDecoration: 'none', color: '#4b5563', fontSize: '14px' }}>About</Link>
+            <Link to="/contact" style={{ textDecoration: 'none', color: '#4b5563', fontSize: '14px' }}>Contact</Link>
+            <Link to="/privacy" style={{ textDecoration: 'none', color: '#4b5563', fontSize: '14px' }}>Privacy</Link>
+            <Link to="/terms" style={{ textDecoration: 'none', color: '#4b5563', fontSize: '14px' }}>Terms</Link>
+          </div>
+        )}
       </div>
       
-      {user && (
+      {user ? (
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <span style={{ 
             marginRight: '15px', 
@@ -74,6 +88,38 @@ const Navbar = () => {
           >
             Log out
           </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Link
+            to="/login"
+            style={{
+              backgroundColor: '#4338ca', // Indigo color
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '6px 12px',
+              fontSize: '14px',
+              textDecoration: 'none',
+              marginRight: '10px'
+            }}
+          >
+            Login
+          </Link>
+          <Link
+            to="/register"
+            style={{
+              backgroundColor: '#f3f4f6',
+              color: '#4b5563',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '6px 12px',
+              fontSize: '14px',
+              textDecoration: 'none'
+            }}
+          >
+            Register
+          </Link>
         </div>
       )}
     </header>

@@ -58,7 +58,7 @@ const AppRouter: React.FC = () => {
   path="/therapist"
   element={
     <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
-      <DashboardLayout fullWidth={true}>
+      <DashboardLayout>
         <TherapistDashboard />
       </DashboardLayout>
     </ProtectedRoute>

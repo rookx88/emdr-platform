@@ -1,4 +1,4 @@
-// PHI Vault Service - Handles encryption and tokenization of Protected Health Information
+// packages/backend/src/services/encryption/phiVaultService.ts
 import crypto from 'crypto';
 import { prisma } from '../../lib/prisma';
 import { createAuditLog } from '../../utils/auditLog';
@@ -138,6 +138,35 @@ const retrievePHI = async (
   return decryptPHI(phiEntry.encryptedData);
 };
 
+// PHI detection patterns
+const PHI_PATTERNS = [
+  // US Phone numbers
+  { 
+    regex: /(\b\d{3}[-.]?\d{3}[-.]?\d{4}\b)/g, 
+    type: 'PHONE_NUMBER' 
+  },
+  // SSN
+  { 
+    regex: /\b\d{3}[-]?\d{2}[-]?\d{4}\b/g, 
+    type: 'SSN' 
+  },
+  // Email addresses
+  { 
+    regex: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, 
+    type: 'EMAIL' 
+  },
+  // Dates of birth
+  { 
+    regex: /\b(0[1-9]|1[0-2])[\/](0[1-9]|[12]\d|3[01])[\/]((19|20)\d{2})\b/g, 
+    type: 'DOB' 
+  },
+  // Addresses (simplified)
+  { 
+    regex: /\b\d+\s+[A-Za-z\s]+(?:street|st|avenue|ave|road|rd|boulevard|blvd|drive|dr|court|ct|lane|ln|way|parkway|pkwy)\b/gi, 
+    type: 'ADDRESS' 
+  }
+];
+
 // Replace PHI in text with tokens
 const tokenizePHIInText = async (
   text: string,
@@ -145,45 +174,38 @@ const tokenizePHIInText = async (
   actorId: string
 ): Promise<string> => {
   if (!text) return text;
-  
-  // Simple PHI detection patterns (in production, use more sophisticated NLP)
-  const patterns = [
-    // US Phone numbers
-    { 
-      regex: /(\b\d{3}[-.]?\d{3}[-.]?\d{4}\b)/g, 
-      type: 'PHONE_NUMBER' 
-    },
-    // SSN
-    { 
-      regex: /\b\d{3}[-]?\d{2}[-]?\d{4}\b/g, 
-      type: 'SSN' 
-    },
-    // Email addresses
-    { 
-      regex: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, 
-      type: 'EMAIL' 
-    },
-    // Dates of birth
-    { 
-      regex: /\b(0[1-9]|1[0-2])[\/](0[1-9]|[12]\d|3[01])[\/]((19|20)\d{2})\b/g, 
-      type: 'DOB' 
-    },
-    // Addresses (simplified)
-    { 
-      regex: /\b\d+\s+[A-Za-z\s]+(?:street|st|avenue|ave|road|rd|boulevard|blvd|drive|dr|court|ct|lane|ln|way|parkway|pkwy)\b/gi, 
-      type: 'ADDRESS' 
-    }
-  ];
-  
+
   let tokenizedText = text;
   
-  // Process each pattern
-  for (const pattern of patterns) {
-    tokenizedText = await tokenizedText.replace(pattern.regex, async (match) => {
-      // Store PHI and get token
-      const token = await storePHI(userId, match, pattern.type, actorId);
-      return `[PHI:${token}]`;
-    });
+  // Process each pattern sequentially
+  for (const pattern of PHI_PATTERNS) {
+    // First find all matches
+    const matches = Array.from(text.matchAll(pattern.regex));
+    
+    // Process each match one by one (in reverse order to avoid index shifting)
+    for (let i = matches.length - 1; i >= 0; i--) {
+      const match = matches[i];
+      if (match && match[0]) {
+        // The PHI value is the full match
+        const phiValue = match[0];
+        
+        // Store PHI and get token
+        const token = await storePHI(userId, phiValue, pattern.type, actorId);
+        
+        // Replace in the tokenized text
+        const tokenMarker = `[PHI:${token}]`;
+        
+        // Calculate the indices to replace
+        const startIndex = match.index || 0;
+        const endIndex = startIndex + phiValue.length;
+        
+        // Replace this specific instance using substring operations
+        tokenizedText = 
+          tokenizedText.substring(0, startIndex) + 
+          tokenMarker + 
+          tokenizedText.substring(endIndex);
+      }
+    }
   }
   
   return tokenizedText;

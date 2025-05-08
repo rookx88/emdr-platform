@@ -21,11 +21,11 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   // Determine which collapsed state to use
   const collapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
-
+  
   if (!user) return null;
-
+  
   const isActive = (path: string) => location.pathname.startsWith(path);
-
+  
   const icons = {
     dashboard: '🏠',
     clients: '👥',
@@ -227,7 +227,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     // Default empty navigation if role doesn't match
     return <ul></ul>;
   };
-
+  
   return (
     <div style={{
       position: 'fixed',
@@ -264,7 +264,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       }}>
         {getNavigationItems()}
       </div>
-
+      
       {/* Toggle button moved below the navigation links */}
       <div style={{
         display: 'flex',

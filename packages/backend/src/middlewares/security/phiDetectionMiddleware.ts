@@ -40,8 +40,8 @@ export const phiDetectionMiddleware = async (
             // Tokenize PHI in text content
             obj[key] = await phiVaultService.tokenizePHIInText(
               obj[key],
-              req.user.userId,
-              req.user.userId
+              req.user!.userId,
+              req.user!.userId
             );
           } else if (typeof obj[key] === 'object' && obj[key] !== null) {
             // Recursively process nested objects

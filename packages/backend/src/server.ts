@@ -7,10 +7,17 @@ import rateLimit from 'express-rate-limit';
 import { errorHandler } from './middlewares/errorHandler';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
-import sessionRoutes from './routes/sessionRoutes'; // Add this line
+import sessionRoutes from './routes/sessionRoutes';
 import clientRoutes from './routes/clientRoutes';
 import therapistRoutes from './routes/therapistRoutes';
 import appointmentRoutes from './routes/appointmentRoutes';
+import phiRoutes from './routes/phiRoutes';
+
+// Security middleware
+import { securityHeadersMiddleware } from './middlewares/security/securityHeadersMiddleware';
+import { phiDetectionMiddleware } from './middlewares/security/phiDetectionMiddleware';
+import { phiResponseMiddleware } from './middlewares/security/phiResponseMiddleware';
+
 // Load environment variables
 dotenv.config({ 
   path: process.env.NODE_ENV === 'production' 
@@ -30,8 +37,14 @@ app.use(cors({
   credentials: true,
 }));
 
+// Apply security headers middleware
+app.use(securityHeadersMiddleware);
+
 // Increase payload size limit for audio data
 app.use(express.json({ limit: '10mb' })); // Increased from 1mb to 10mb
+
+// Apply PHI detection middleware for request processing
+app.use(phiDetectionMiddleware);
 
 // Rate limiting for security
 if (process.env.ENABLE_RATE_LIMITING === 'true') {
@@ -48,13 +61,17 @@ app.use((req, res, next) => {
   next();
 });
 
+// Apply PHI response middleware for all routes
+app.use(phiResponseMiddleware());
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/sessions', sessionRoutes); // Add this line
+app.use('/api/sessions', sessionRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/therapists', therapistRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/phi', phiRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -74,10 +91,3 @@ app.listen(PORT, () => {
 });
 
 export default app;
-// Add security middleware
-import { securityHeadersMiddleware } from './middleware/security/securityHeadersMiddleware';
-import { phiDetectionMiddleware } from './middleware/security/phiDetectionMiddleware';
-
-// Apply security middleware (add these lines after other middleware like helmet and cors)
-app.use(securityHeadersMiddleware);
-app.use(phiDetectionMiddleware);

@@ -29,4 +29,8 @@ router.post('/:id/restore', authenticate, requireRole(['ADMIN']), clientControll
 // Assign therapist to client
 router.post('/:clientId/assign-therapist', authenticate, requireRole(['THERAPIST', 'ADMIN']), clientController.assignTherapist);
 
+
+router.post('/invite', authenticate, requireRole(['THERAPIST', 'ADMIN']), clientController.inviteClient);
+
+
 export default router;

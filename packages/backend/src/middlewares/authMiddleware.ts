@@ -1,14 +1,12 @@
-// Enhanced authMiddleware.ts
-
+// packages/backend/src/middlewares/authMiddleware.ts
 import { Request, Response, NextFunction } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { userService } from '../services/userService';
 import { PrismaClient } from '@prisma/client';
-import { TokenPayload } from '../types/express';
+import { TokenPayload, PHIContext } from '../types/express';
 
 // Ensure we're using a fresh instance of the Prisma client with all models
 const prisma = new PrismaClient();
-
 
 // Session timeout in minutes - defaults to 30 mins of inactivity
 const SESSION_TIMEOUT = parseInt(process.env.SESSION_TIMEOUT || '30', 10);
@@ -106,6 +104,30 @@ export const requireRole = (roles: string[]) => {
       
       return res.status(403).json({ message: 'Forbidden' });
     }
+    
+    next();
+  };
+};
+
+// New middleware to handle PHI for specific sensitive routes that require detokenization
+export const handlePHI = (requiredPurpose: string) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    
+    // Get purpose from query or default to the required purpose
+    const purpose = req.query.purpose?.toString() || requiredPurpose;
+    
+    // Check if a detokenize action is explicitly requested
+    const shouldDetokenize = req.query.detokenize === 'true';
+    
+    // Store these values in the request for route handlers to use
+    req.phiContext = {
+      purpose,
+      shouldDetokenize,
+      actorId: req.user.userId
+    };
     
     next();
   };
