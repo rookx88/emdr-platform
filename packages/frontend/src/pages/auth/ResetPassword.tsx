@@ -12,7 +12,8 @@ const ResetPassword: React.FC = () => {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { token } = useParams<{ token: string }>();
+  const params = useParams();
+  const token = params.token;
   const { resetPassword } = useAuth();
   const navigate = useNavigate();
   

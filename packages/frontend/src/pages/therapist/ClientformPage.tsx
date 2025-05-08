@@ -4,7 +4,8 @@ import { useParams } from 'react-router-dom';
 import ClientForm from '../../components/client/ClientForm';
 
 const ClientFormPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams();
+  const id = params.id;
   const mode = id ? 'edit' : 'create';
   
   return (

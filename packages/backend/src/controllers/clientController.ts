@@ -1,4 +1,3 @@
-// packages/backend/src/controllers/clientController.ts
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../lib/prisma';
 import { createAuditLog } from '../utils/auditLog';
@@ -10,47 +9,16 @@ export const clientController = {
     try {
       const { role, userId } = req.user!;
       
-      // Add filtering parameters
-      const { search, status, therapistId } = req.query;
-      
-      // Build filter
-      const filter: any = {};
-      
-      // Add search filter if provided
-      if (search) {
-        filter.OR = [
-          {
-            user: {
-              firstName: { contains: search as string, mode: 'insensitive' }
-            }
-          },
-          {
-            user: {
-              lastName: { contains: search as string, mode: 'insensitive' }
-            }
-          },
-          {
-            user: {
-              email: { contains: search as string, mode: 'insensitive' }
-            }
-          }
-        ];
+      // Only therapists and admins can access client lists
+      if (role !== 'THERAPIST' && role !== 'ADMIN') {
+        return res.status(403).json({ message: 'Unauthorized' });
       }
       
-      // Add status filter if provided
-      if (status === 'active') {
-        filter.user = { isActive: true };
-      } else if (status === 'inactive') {
-        filter.user = { isActive: false };
-      }
+      let clients;
       
-      // Add therapist filter if provided
-      if (therapistId) {
-        filter.therapistId = therapistId as string;
-      }
-      
-      // For therapists, only show their clients
+      // If therapist, only return their clients
       if (role === 'THERAPIST') {
+        // Get therapist profile ID
         const therapistProfile = await prisma.therapistProfile.findFirst({
           where: { userId }
         });
@@ -59,41 +27,48 @@ export const clientController = {
           return res.status(404).json({ message: 'Therapist profile not found' });
         }
         
-        // Override any therapistId filter with the current therapist
-        filter.therapistId = therapistProfile.id;
-      }
-      
-      const clients = await prisma.clientProfile.findMany({
-        where: filter,
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-              role: true,
-              isActive: true,
-              createdAt: true
+        clients = await prisma.clientProfile.findMany({
+          where: { therapistId: therapistProfile.id },
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                role: true,
+                isActive: true
+              }
             }
-          },
-          therapist: role === 'CLIENT' ? undefined : {
-            include: {
-              user: {
-                select: {
-                  firstName: true,
-                  lastName: true
+          }
+        });
+      } else {
+        // Admins can see all clients
+        clients = await prisma.clientProfile.findMany({
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                role: true,
+                isActive: true
+              }
+            },
+            therapist: {
+              include: {
+                user: {
+                  select: {
+                    firstName: true,
+                    lastName: true
+                  }
                 }
               }
             }
           }
-        },
-        orderBy: {
-          user: {
-            lastName: 'asc'
-          }
-        }
-      });
+        });
+      }
       
       // Create audit log
       await createAuditLog(
@@ -101,7 +76,7 @@ export const clientController = {
         'LIST_CLIENTS',
         'ClientProfile',
         'ALL',
-        { count: clients.length, filter: req.query }
+        { count: clients.length }
       );
       
       res.json(clients);
@@ -262,7 +237,7 @@ export const clientController = {
     }
   },
   
-  // Create a new client
+  // Fixed createClient function in clientController.ts
   async createClient(req: Request, res: Response, next: NextFunction) {
     try {
       const { role, userId } = req.user!;
@@ -389,8 +364,6 @@ export const clientController = {
       }
       
       const {
-        firstName,
-        lastName,
         phoneNumber,
         dateOfBirth,
         address,
@@ -414,53 +387,32 @@ export const clientController = {
         }
       }
       
-      // Update client profile and user in a transaction
-      const updatedClient = await prisma.$transaction(async (prisma) => {
-        // Update user information if provided
-        if (firstName !== undefined || lastName !== undefined) {
-          const client = await prisma.clientProfile.findUnique({
-            where: { id },
-            select: { userId: true }
-          });
-          
-          if (client) {
-            await prisma.user.update({
-              where: { id: client.userId },
-              data: {
-                firstName: firstName !== undefined ? firstName : undefined,
-                lastName: lastName !== undefined ? lastName : undefined
-              }
-            });
-          }
-        }
-        
-        // Update client profile
-        return prisma.clientProfile.update({
-          where: { id },
-          data: {
-            phoneNumber,
-            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
-            address,
-            emergencyContact,
-            emergencyPhone,
-            preferredDays: preferredDays || undefined,
-            preferredTimes: preferredTimes || undefined,
-            appointmentDuration: appointmentDuration || undefined,
-            therapistId: therapistId || undefined
-          },
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
-                firstName: true,
-                lastName: true,
-                role: true,
-                isActive: true
-              }
+      // Update client profile
+      const updatedClient = await prisma.clientProfile.update({
+        where: { id },
+        data: {
+          phoneNumber,
+          dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+          address,
+          emergencyContact,
+          emergencyPhone,
+          preferredDays: preferredDays || undefined,
+          preferredTimes: preferredTimes || undefined,
+          appointmentDuration: appointmentDuration || undefined,
+          therapistId: therapistId || undefined
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              role: true,
+              isActive: true
             }
           }
-        });
+        }
       });
       
       // Create audit log

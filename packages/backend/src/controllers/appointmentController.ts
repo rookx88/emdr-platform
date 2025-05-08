@@ -2,7 +2,16 @@ import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../lib/prisma';
 import { createAuditLog } from '../utils/auditLog';
 import { appointmentService } from '../services/appointmentService';
-import { AppointmentStatus } from '@prisma/client';
+
+// Define the enum locally as both type and value
+const AppointmentStatus = {
+  SCHEDULED: 'SCHEDULED',
+  CONFIRMED: 'CONFIRMED',
+  CANCELED: 'CANCELED',
+  COMPLETED: 'COMPLETED'
+} as const;
+
+type AppointmentStatus = typeof AppointmentStatus[keyof typeof AppointmentStatus];
 
 export const appointmentController = {
   async createAppointment(req: Request, res: Response, next: NextFunction) {

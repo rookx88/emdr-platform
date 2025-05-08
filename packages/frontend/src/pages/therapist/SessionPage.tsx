@@ -30,7 +30,8 @@ const PanelContainer: React.FC<{
 
 // Main SessionPage component
 const SessionPageContent: React.FC = () => {
-  const { sessionId } = useParams<{ sessionId: string }>();
+  const params = useParams();
+  const sessionId = params.sessionId;
   const [sessionData, setSessionData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);

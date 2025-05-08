@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Role } from '../../types';
+import { Role } from '../../types/index';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 

@@ -1,7 +1,7 @@
 // packages/frontend/src/router/AppRouter.tsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Role } from '../types';
+import { Role } from '../types/index';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import ProtectedRoute from './ProtectedRoute';
 

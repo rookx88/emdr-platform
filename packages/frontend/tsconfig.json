@@ -18,7 +18,9 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "typeRoots": ["./node_modules/@types", "../node_modules/@types", "../../node_modules/@types"],
+    "types": [] // This allows you to explicitly list types packages if needed
   },
   "include": [
     "src"

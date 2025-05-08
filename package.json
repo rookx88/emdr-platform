@@ -30,8 +30,26 @@
   "author": "",
   "license": "UNLICENSED",
   "devDependencies": {
+    "@types/axios": "^0.14.4",
+    "@types/babel__core": "^7.20.5",
+    "@types/babel__generator": "^7.27.0",
+    "@types/babel__template": "^7.4.4",
+    "@types/babel__traverse": "^7.20.7",
+    "@types/istanbul-lib-report": "^3.0.3",
+    "@types/istanbul-reports": "^3.0.4",
+    "@types/long": "^5.0.0",
+    "@types/md5": "^2.3.5",
+    "@types/parse-json": "^7.0.0",
+    "@types/qs": "^6.9.18",
+    "@types/range-parser": "^1.2.7",
+    "@types/send": "^0.17.4",
+    "@types/serve-static": "^1.15.7",
+    "@types/stack-utils": "^2.0.3",
+    "concurrently": "^8.2.2",
     "husky": "^9.1.7",
-    "lint-staged": "^15.5.1",
-    "concurrently": "^8.2.2"
+    "lint-staged": "^15.5.1"
+  },
+  "dependencies": {
+    "axios": "^1.9.0"
   }
 }

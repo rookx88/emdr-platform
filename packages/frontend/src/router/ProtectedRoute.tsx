@@ -2,7 +2,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Role } from '../types';
+import { Role } from '../types/index';
 import DashboardLayout from '../layouts/DashBoardLayout';
 
 interface ProtectedRouteProps {

@@ -122,8 +122,10 @@ export const appointmentService = {
     userRole: string,
     filter: any = {}
   ): Promise<Appointment[]> {
-    // Initialize with proper type
-    let appointments: Appointment[] = [];
+    let appointments: (Appointment & {
+      client?: { user: { id: string; email: string; firstName: string | null; lastName: string | null } };
+      therapist?: { user: { id: string; email: string; firstName: string | null; lastName: string | null } };
+    })[] = [];
 
     if (userRole === 'ADMIN') {
       // Admins can see all appointments
@@ -199,12 +201,10 @@ export const appointmentService = {
 
       if (client) {
         // Get appointments where this user is the client
-        // Modified to use enum types correctly
         appointments = await prisma.appointment.findMany({
           where: {
             clientId: client.id,
-            ...filter 
-            // The filter will now handle the status properly
+            ...filter
           },
           include: {
             therapist: {

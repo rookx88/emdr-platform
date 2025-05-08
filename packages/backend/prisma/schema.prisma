@@ -316,4 +316,115 @@ enum AppointmentType {
   EMDR
   FOLLOWUP
   EMERGENCY
+}// PHI Protection Models
+model ProtectedHealthInfo {
+  id            String    @id @default(uuid())
+  token         String    @unique
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phiType       String
+  encryptedData String
+  createdAt     DateTime  @default(now())
+  lastAccessed  DateTime
+
+  @@index([userId])
+  @@index([phiType])
+}
+
+model SecurityScan {
+  id          String    @id @default(uuid())
+  scanType    String
+  startedBy   String
+  user        User      @relation(fields: [startedBy], references: [id])
+  startedAt   DateTime
+  completedAt DateTime?
+  status      String
+  findings    Json?
+
+  @@index([startedBy])
+  @@index([startedAt])
+  @@index([status])
+}
+
+model PHIAccessAttempt {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phiToken      String
+  timestamp     DateTime @default(now())
+  wasAuthorized Boolean
+  ipAddress     String
+  userAgent     String
+  purpose       String?
+
+  @@index([userId])
+  @@index([phiToken])
+  @@index([timestamp])
+  @@index([wasAuthorized])
+}
+
+// Add to User model:
+model User {
+  // Existing fields...
+  
+  // Add these relations
+  protectedHealthInfo ProtectedHealthInfo[]
+  securityScans SecurityScan[]
+  phiAccessAttempts PHIAccessAttempt[]
+}
+// PHI Protection Models
+model ProtectedHealthInfo {
+  id            String    @id @default(uuid())
+  token         String    @unique
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phiType       String
+  encryptedData String
+  createdAt     DateTime  @default(now())
+  lastAccessed  DateTime
+
+  @@index([userId])
+  @@index([phiType])
+}
+
+model SecurityScan {
+  id          String    @id @default(uuid())
+  scanType    String
+  startedBy   String
+  user        User      @relation(fields: [startedBy], references: [id])
+  startedAt   DateTime
+  completedAt DateTime?
+  status      String
+  findings    Json?
+
+  @@index([startedBy])
+  @@index([startedAt])
+  @@index([status])
+}
+
+model PHIAccessAttempt {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phiToken      String
+  timestamp     DateTime @default(now())
+  wasAuthorized Boolean
+  ipAddress     String
+  userAgent     String
+  purpose       String?
+
+  @@index([userId])
+  @@index([phiToken])
+  @@index([timestamp])
+  @@index([wasAuthorized])
+}
+
+// Add to User model:
+model User {
+  // Existing fields...
+  
+  // Add these relations
+  protectedHealthInfo ProtectedHealthInfo[]
+  securityScans SecurityScan[]
+  phiAccessAttempts PHIAccessAttempt[]
 }

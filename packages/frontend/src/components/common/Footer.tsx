@@ -44,8 +44,8 @@ const Footer = () => {
               fontSize: '0.875rem',
               transition: 'color 0.2s'
             }}
-            onMouseOver={(e) => e.currentTarget.style.color = '#1f2937'}
-            onMouseOut={(e) => e.currentTarget.style.color = '#4b5563'}
+            onMouseOver={(e: React.MouseEvent<HTMLAnchorElement>) => e.currentTarget.style.color = '#1f2937'}
+            onMouseOut={(e: React.MouseEvent<HTMLAnchorElement>) => e.currentTarget.style.color = '#4b5563'}
           >
             {link.name}
           </Link>

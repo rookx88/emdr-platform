@@ -1,9 +1,9 @@
 // src/context/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authService, userService } from '../services/api';
-import { User } from '../types';
+import { User } from '../types/index';
 
-const safeLocalStorage = {
+const safeLocalStorage = {  
   getItem: (key: string): string | null => {
     try {
       return localStorage.getItem(key);

@@ -74,3 +74,10 @@ app.listen(PORT, () => {
 });
 
 export default app;
+// Add security middleware
+import { securityHeadersMiddleware } from './middleware/security/securityHeadersMiddleware';
+import { phiDetectionMiddleware } from './middleware/security/phiDetectionMiddleware';
+
+// Apply security middleware (add these lines after other middleware like helmet and cors)
+app.use(securityHeadersMiddleware);
+app.use(phiDetectionMiddleware);

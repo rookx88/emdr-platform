@@ -17,7 +17,8 @@ interface ClientFormData {
 }
 
 const ClientForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) => {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams();
+  const id = params.id;
   const navigate = useNavigate();
   const { user } = useAuth();
   

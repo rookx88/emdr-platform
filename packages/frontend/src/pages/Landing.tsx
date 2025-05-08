@@ -220,11 +220,11 @@ const LandingPage = () => {
               letterSpacing: '0.5px',
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
             }}
-            onMouseOver={(e) => {
+            onMouseOver={(e: React.MouseEvent<HTMLAnchorElement>) => {
               e.currentTarget.style.backgroundColor = '#b45309';
               e.currentTarget.style.boxShadow = '0 3px 6px rgba(0,0,0,0.15)';
             }}
-            onMouseOut={(e) => {
+            onMouseOut={(e: React.MouseEvent<HTMLAnchorElement>) => {
               e.currentTarget.style.backgroundColor = '#d97706';
               e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
             }}
