@@ -188,27 +188,37 @@ const TherapistDashboard: React.FC = () => {
       </div>
       
       {/* Right Sidebar */}
-      <div className={`bg-yellow-100 w-64 p-4 h-full rounded-lg transition-all duration-300 ${sidebarExpanded ? 'block' : 'hidden'}`}>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Day at a Glance</h2>
-          <button 
-            onClick={() => setSidebarExpanded(!sidebarExpanded)}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            {sidebarExpanded ? '→' : '←'}
-          </button>
-        </div>
-        
-        <div className="mb-4">
-          <h3 className="font-medium text-gray-700">Monday, May 5</h3>
-          <p className="text-sm text-gray-600 mt-2">No appointments scheduled for today</p>
-        </div>
-        
-        <div>
-          <h3 className="text-lg font-bold mb-2">Priority Items</h3>
-          <p className="text-gray-600 text-sm">Coming soon</p>
-        </div>
+<div className={`bg-yellow-100 rounded-lg transition-all duration-300 flex ${sidebarExpanded ? 'w-64' : 'w-8'}`}>
+  {/* This is the main sidebar content that shows/hides */}
+  {sidebarExpanded && (
+    <div className="flex-grow p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">Day at a Glance</h2>
       </div>
+      
+      <div className="mb-4">
+        <h3 className="font-medium text-gray-700">Monday, May 5</h3>
+        <p className="text-sm text-gray-600 mt-2">No appointments scheduled for today</p>
+      </div>
+      
+      <div>
+        <h3 className="text-lg font-bold mb-2">Priority Items</h3>
+        <p className="text-gray-600 text-sm">Coming soon</p>
+      </div>
+    </div>
+  )}
+  
+  {/* Toggle button that's always visible */}
+  <div className="flex items-center">
+    <button 
+      onClick={() => setSidebarExpanded(!sidebarExpanded)}
+      className="text-gray-700 hover:text-gray-900 h-full px-1 flex items-center justify-center"
+      aria-label={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
+    >
+      {sidebarExpanded ? '→' : '←'}
+    </button>
+  </div>
+</div>
     </div>
   );
 };

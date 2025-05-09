@@ -7,6 +7,7 @@ import { userService } from '../services/userService';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { emailService } from '../services/emailService';
+import { Appointment } from '@prisma/client';
 
 export const clientController = {
   // Get all clients (for therapists and admins)
@@ -781,7 +782,7 @@ export const clientController = {
         });
         
         // Create initial session if requested
-        let createdSession = null;
+        let createdSession: Appointment | null = null;
         if (session) {
           const { date, time, type, notes } = session;
           

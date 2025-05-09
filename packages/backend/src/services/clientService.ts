@@ -133,4 +133,10 @@ export const clientService = {
     }
     
     // Token has expired
-    if (new Date() > invitation.expires
+    if (new Date() > invitation.expiresAt) {
+      return { valid: false, message: 'Invitation token has expired' };
+    }
+    
+    return { valid: true, userId: invitation.userId };
+  },
+};

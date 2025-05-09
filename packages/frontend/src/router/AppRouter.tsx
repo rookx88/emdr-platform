@@ -38,6 +38,7 @@ import ClientProfilePage from '../pages/client/ProfilePage';
 import ClientFormPage from '../pages/therapist/ClientformPage';
 import ClientDetailPage from '../pages/therapist/ClientDetailPage';
 import DashboardLayout from '../layouts/DashBoardLayout';
+import AcceptInvitation from '../pages/auth/AcceptInvitation';
 const AppRouter: React.FC = () => {
   return (
     <Router>
@@ -52,18 +53,22 @@ const AppRouter: React.FC = () => {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password/:token" element={<ResetPassword />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
+              <Route
+                path="/accept-invite/:token"
+                element={<AcceptInvitation />}
+              />
 
               {/* Protected routes */}
               <Route
-  path="/therapist"
-  element={
-    <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
-      <DashboardLayout>
-        <TherapistDashboard />
-      </DashboardLayout>
-    </ProtectedRoute>
-  }
-/>
+                path="/therapist"
+                element={
+                  <ProtectedRoute allowedRoles={[Role.THERAPIST, Role.ADMIN]}>
+
+                    <TherapistDashboard />
+
+                  </ProtectedRoute>
+                }
+              />
 
               {/* New route for therapy sessions */}
               <Route
