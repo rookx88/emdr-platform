@@ -1,7 +1,9 @@
+// packages/backend/src/controllers/clientController.ts
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../lib/prisma';
 import { createAuditLog } from '../utils/auditLog';
 import { clientService } from '../services/clientService';
+import { userService } from '../services/userService';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { emailService } from '../services/emailService';
@@ -112,7 +114,8 @@ export const clientController = {
               lastName: true,
               role: true,
               isActive: true,
-              createdAt: true
+              createdAt: true,
+              lastLoginAt: true
             }
           },
           therapist: {
@@ -240,7 +243,7 @@ export const clientController = {
     }
   },
   
-  // Fixed createClient function in clientController.ts
+  // Create a new client
   async createClient(req: Request, res: Response, next: NextFunction) {
     try {
       const { role, userId } = req.user!;
@@ -332,21 +335,16 @@ export const clientController = {
         { email }
       );
       
-      // In a complete implementation, we would send an invite email here
-      // with password reset instructions
-      
-      // Fixed response to avoid duplicate id
+      // Return a properly structured response
       res.status(201).json({
-        // Remove the duplicate "id" property
+        clientProfile: result.clientProfile,
         user: {
           id: result.user.id,
           email: result.user.email,
           firstName: result.user.firstName,
           lastName: result.user.lastName,
           role: result.user.role
-        },
-        // Include clientProfile without manually spreading it
-        clientProfile: result.clientProfile
+        }
       });
     } catch (error) {
       next(error);
@@ -531,6 +529,165 @@ export const clientController = {
       ]);
       
       res.json({ message: 'Client restored successfully' });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // Verify invite token
+  async verifyInviteToken(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { token } = req.params;
+      
+      if (!token) {
+        return res.status(400).json({ message: 'Token is required' });
+      }
+      
+      // Find the invitation token
+      const invitation = await prisma.invitationToken.findUnique({
+        where: { token },
+        include: {
+          user: {
+            select: {
+              email: true,
+              firstName: true,
+              lastName: true,
+              isActive: true
+            }
+          }
+        }
+      });
+      
+      if (!invitation) {
+        return res.status(404).json({ message: 'Invalid or expired invitation' });
+      }
+      
+      // Check if token is expired
+      if (new Date() > invitation.expiresAt) {
+        return res.status(410).json({ 
+          message: 'This invitation has expired', 
+          expired: true 
+        });
+      }
+      
+      // Check if token has been used already
+      if (!invitation.isActive || invitation.usedAt) {
+        return res.status(410).json({ 
+          message: 'This invitation has already been used', 
+          used: true 
+        });
+      }
+      
+      // Check if user is active
+      if (!invitation.user.isActive) {
+        return res.status(403).json({ 
+          message: 'The associated account is inactive', 
+          inactive: true 
+        });
+      }
+      
+      // Return basic info about the invitation
+      res.json({
+        valid: true,
+        email: invitation.user.email,
+        firstName: invitation.user.firstName,
+        lastName: invitation.user.lastName,
+        expiresAt: invitation.expiresAt
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+  
+  // Complete registration with invite token
+  async completeRegistration(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { token } = req.params;
+      const { password, confirmPassword, firstName, lastName } = req.body;
+      
+      if (!token) {
+        return res.status(400).json({ message: 'Token is required' });
+      }
+      
+      if (!password) {
+        return res.status(400).json({ message: 'Password is required' });
+      }
+      
+      if (password !== confirmPassword) {
+        return res.status(400).json({ message: 'Passwords do not match' });
+      }
+      
+      // Find the invitation token
+      const invitation = await prisma.invitationToken.findUnique({
+        where: { token },
+        include: {
+          user: true
+        }
+      });
+      
+      if (!invitation) {
+        return res.status(404).json({ message: 'Invalid or expired invitation' });
+      }
+      
+      // Check if token is expired
+      if (new Date() > invitation.expiresAt) {
+        return res.status(410).json({ 
+          message: 'This invitation has expired', 
+          expired: true 
+        });
+      }
+      
+      // Check if token has been used already
+      if (!invitation.isActive || invitation.usedAt) {
+        return res.status(410).json({ 
+          message: 'This invitation has already been used', 
+          used: true 
+        });
+      }
+      
+      // Update user and mark token as used
+      await prisma.$transaction(async (prisma) => {
+        // Update user account with new password and profile info
+        await userService.updatePassword(invitation.userId, password);
+        
+        // Update user info
+        await prisma.user.update({
+          where: { id: invitation.userId },
+          data: {
+            firstName: firstName || invitation.user.firstName,
+            lastName: lastName || invitation.user.lastName,
+            isActive: true
+          }
+        });
+        
+        // Mark the token as used
+        await prisma.invitationToken.update({
+          where: { id: invitation.id },
+          data: {
+            isActive: false,
+            usedAt: new Date()
+          }
+        });
+        
+        // Create audit log
+        await prisma.auditLog.create({
+          data: {
+            userId: invitation.userId,
+            action: 'COMPLETE_REGISTRATION',
+            resourceType: 'User',
+            resourceId: invitation.userId,
+            ipAddress: req.ip || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'Unknown',
+            details: JSON.stringify({ registrationCompleted: true }),
+            timestamp: new Date()
+          }
+        });
+      });
+      
+      res.json({ 
+        message: 'Registration completed successfully', 
+        email: invitation.user.email 
+      });
     } catch (error) {
       next(error);
     }

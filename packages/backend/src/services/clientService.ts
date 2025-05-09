@@ -1,5 +1,8 @@
+// packages/backend/src/services/clientService.ts
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+import { createAuditLog } from '../utils/auditLog';
 
 const prisma = new PrismaClient();
 
@@ -82,62 +85,52 @@ export const clientService = {
     });
   },
   
+  /**
+   * Generate an invitation token for a new client
+   */
+  async generateInviteToken(userId: string, expiryDays: number = 7): Promise<string> {
+    // Generate a secure random token
+    const token = crypto.randomBytes(32).toString('hex');
+    
+    // Calculate expiry date
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + expiryDays);
+    
+    // Store the token in the database
+    await prisma.invitationToken.create({
+      data: {
+        token,
+        userId,
+        expiresAt,
+        isActive: true
+      }
+    });
+    
+    return token;
+  },
   
-  async getClientWithDetails(clientId: string): Promise<any> {
-    return prisma.clientProfile.findUnique({
-      where: { id: clientId },
+  /**
+   * Verify if an invitation token is valid
+   */
+  async verifyInviteToken(token: string): Promise<{ valid: boolean; userId?: string; message?: string }> {
+    // Find the token
+    const invitation = await prisma.invitationToken.findUnique({
+      where: { token },
       include: {
         user: {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
-            role: true,
-            isActive: true,
-            createdAt: true,
-            lastLoginAt: true
+            isActive: true
           }
-        },
-        therapist: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true
-              }
-            }
-          }
-        },
-        appointments: {
-          orderBy: {
-            startTime: 'desc'
-          },
-          take: 10
         }
       }
     });
-  },
-  
-  /**
-   * Get recent client activity
-   */
-  async getClientActivity(clientId: string): Promise<any> {
-    // Find client user ID first
-    const client = await prisma.clientProfile.findUnique({
-      where: { id: clientId },
-      select: { userId: true }
-    });
     
-    if (!client) return [];
+    // Token doesn't exist
+    if (!invitation) {
+      return { valid: false, message: 'Invalid invitation token' };
+    }
     
-    // Get user activity
-    return prisma.userActivity.findMany({
-      where: { userId: client.userId },
-      orderBy: { timestamp: 'desc' },
-      take: 20
-    });
-  }
-};
+    // Token has expired
+    if (new Date() > invitation.expires
