@@ -50,6 +50,7 @@ model User {
   lockedReason        String?
   twoFactorEnabled    Boolean               @default(false)
   twoFactorSecret     String?
+  invitationTokens  InvitationToken[]
   
   // Relations
   passwordHistory     PasswordHistory[]
@@ -370,4 +371,19 @@ model PHIAccessAttempt {
   @@index([phiToken])
   @@index([timestamp])
   @@index([wasAuthorized])
+}
+
+model InvitationToken {
+  id          String    @id @default(uuid())
+  token       String    @unique
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  usedAt      DateTime?
+  
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
 }

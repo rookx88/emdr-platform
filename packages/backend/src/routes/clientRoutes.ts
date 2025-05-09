@@ -29,6 +29,8 @@ router.post('/:id/restore', authenticate, requireRole(['ADMIN']), clientControll
 // Assign therapist to client
 router.post('/:clientId/assign-therapist', authenticate, requireRole(['THERAPIST', 'ADMIN']), clientController.assignTherapist);
 
+router.get('/verify-invite/:token', clientController.verifyInviteToken);
+router.post('/complete-registration/:token', clientController.completeRegistration);
 
 router.post('/invite', authenticate, requireRole(['THERAPIST', 'ADMIN']), clientController.inviteClient);
 

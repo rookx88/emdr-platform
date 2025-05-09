@@ -25,6 +25,7 @@
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^7.0.3",
     "twilio": "^5.5.2"
   },
   "devDependencies": {
@@ -34,6 +35,7 @@
     "@types/jest": "^29.5.12",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20.11.20",
+    "@types/nodemailer": "^6.4.17",
     "@types/parse-json": "^7.0.0",
     "@typescript-eslint/eslint-plugin": "^7.0.2",
     "@typescript-eslint/parser": "^7.0.2",
