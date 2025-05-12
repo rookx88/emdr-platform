@@ -1,5 +1,5 @@
 // packages/frontend/src/components/client/ClientList.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import ClientInviteForm from './ClientInviteForm';
@@ -30,11 +30,8 @@ const ClientList: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [showInviteForm, setShowInviteForm] = useState(false);
   
-  useEffect(() => {
-    fetchClients();
-  }, [statusFilter]);
-  
-  const fetchClients = async () => {
+  // Use useCallback to memoize the fetchClients function
+  const fetchClients = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -57,7 +54,12 @@ const ClientList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery, statusFilter]); // Added dependencies
+  
+  // Use fetchClients in useEffect with proper dependencies
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,162 +68,136 @@ const ClientList: React.FC = () => {
   
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-     
-      
-      {/* Add New Client Section - Styled like the landing page */}
-      <div className="bg-amber-50/80 rounded-xl p-8 mb-8 shadow-md backdrop-blur-sm">
-        <div className="mb-6">
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">Add New Client</h2>
-        </div>
-        
+      {/* Header with Add New Client button on the right */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
         <button
           onClick={() => setShowInviteForm(!showInviteForm)}
-          className={`px-6 py-2 rounded-md font-medium transition-colors ${
-            showInviteForm 
-              ? 'bg-amber-100 text-amber-800 border border-amber-300'
-              : 'bg-amber-500 text-white hover:bg-amber-600'
-          }`}
+          className="px-6 py-3 bg-amber-100 text-gray-800 hover:bg-amber-200 rounded-full font-medium"
         >
-          {showInviteForm ? 'Hide Form' : 'Show Form'}
+          {showInviteForm ? 'Hide Form' : 'Add New Client'}
         </button>
-        
-        {showInviteForm && (
-          <div className="mt-6">
-            <ClientInviteForm onClientInvited={() => fetchClients()} />
-          </div>
-        )}
       </div>
       
-      {/* Clients Section */}
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-3xl font-bold text-gray-800">Clients</h2>
-        </div>
-        
-        {/* Search and filter section */}
-        <div className="p-6 bg-gray-50 border-b border-gray-200">
-          <div className="flex flex-col md:flex-row gap-4">
-            <form onSubmit={handleSearch} className="flex-grow">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  placeholder="Search clients..."
-                />
-                <button
-                  type="submit"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                >
-                  <svg className="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-            </form>
-            
-            <div className="flex-shrink-0">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
-              >
-                <option value="all">All Clients</option>
-                <option value="active">Active Only</option>
-                <option value="inactive">Inactive Only</option>
-              </select>
-            </div>
-            
-            
+      {/* Client invite form (collapsible) */}
+      {showInviteForm && (
+        <div className="mb-8 bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-lg font-semibold">Add New Client</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Create a new client account and optionally send them an invitation email
+            </p>
           </div>
+          <div className="p-6">
+            <ClientInviteForm 
+              onClientInvited={() => {
+                fetchClients();
+                setShowInviteForm(false); // Auto-hide form after successful invitation
+              }} 
+            />
+          </div>
+        </div>
+      )}
+      
+      {/* Search and filter bar */}
+      <div className="flex gap-4 mb-6">
+        <form onSubmit={handleSearch} className="flex-grow relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-full"
+            placeholder="Search clients..."
+          />
+          <button
+            type="submit"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            aria-label="Search"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+        </form>
+        
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as any)}
+          className="px-4 py-2 border border-gray-300 rounded-full bg-white"
+        >
+          <option value="all">All Clients</option>
+          <option value="active">Active Only</option>
+          <option value="inactive">Inactive Only</option>
+        </select>
+      </div>
+      
+      {/* Client list */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        {/* Column headers */}
+        <div className="grid grid-cols-4 gap-4 px-6 py-3 bg-gray-50 border-b border-gray-200">
+          <div className="text-sm font-medium text-gray-500">NAME</div>
+          <div className="text-sm font-medium text-gray-500">EMAIL</div>
+          <div className="text-sm font-medium text-gray-500">STATUS</div>
+          <div className="text-sm font-medium text-gray-500 text-right">ACTIONS</div>
         </div>
         
         {/* Loading state */}
         {loading && (
-          <div className="p-12 flex flex-col items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-amber-500 border-t-transparent"></div>
-            <p className="mt-4 text-gray-600">Loading clients...</p>
+          <div className="px-6 py-10 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
+            <p className="mt-2 text-gray-600">Loading clients...</p>
           </div>
         )}
         
         {/* Error state */}
         {error && (
-          <div className="p-6 bg-red-50 text-red-700 text-center border-b border-red-100">
+          <div className="px-6 py-4 text-red-700 bg-red-50">
             <p>{error}</p>
           </div>
         )}
         
-        {/* Client list */}
-        {!loading && !error && (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {clients.length > 0 ? (
-                  clients.map((client) => (
-                    <tr key={client.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {client.user.firstName || ''} {client.user.lastName || ''}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{client.user.email}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          client.user.isActive 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {client.user.isActive ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <Link 
-                          to={`/therapist/clients/${client.id}`}
-                          className="text-amber-600 hover:text-amber-800 mr-4"
-                        >
-                          View
-                        </Link>
-                        <Link 
-                          to={`/therapist/clients/${client.id}/edit`}
-                          className="text-amber-600 hover:text-amber-800"
-                        >
-                          Edit
-                        </Link>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
-                      No clients found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        {/* Empty state */}
+        {!loading && !error && clients.length === 0 && (
+          <div className="px-6 py-10 text-center">
+            <p className="text-gray-500">No clients found</p>
           </div>
         )}
         
-        
+        {/* Client rows */}
+        {!loading && !error && clients.map((client) => (
+          <div 
+            key={client.id} 
+            className="grid grid-cols-4 gap-4 px-6 py-4 border-b border-gray-200 hover:bg-gray-50"
+          >
+            <div className="font-medium text-gray-900">
+              {client.user.firstName || ''} {client.user.lastName || ''}
+            </div>
+            <div className="text-gray-500">{client.user.email}</div>
+            <div>
+              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                client.user.isActive 
+                  ? 'bg-green-100 text-green-800' 
+                  : 'bg-red-100 text-red-800'
+              }`}>
+                {client.user.isActive ? 'Active' : 'Inactive'}
+              </span>
+            </div>
+            <div className="text-right">
+              <Link 
+                to={`/therapist/clients/${client.id}`}
+                className="text-amber-600 hover:text-amber-800 mr-4"
+              >
+                View
+              </Link>
+              <Link 
+                to={`/therapist/clients/${client.id}/edit`}
+                className="text-amber-600 hover:text-amber-800"
+              >
+                Edit
+              </Link>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

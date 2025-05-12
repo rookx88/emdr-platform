@@ -1,7 +1,8 @@
-// packages/frontend/src/components/client/ClientDetail.tsx
-import React, { useState, useEffect } from 'react';
+// Updated ClientDetail.tsx with integrated ScheduleSessionModal
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import ScheduleSessionModal from '../therapist/ScheduleSessionModal';
 
 interface Client {
   id: string;
@@ -36,12 +37,9 @@ const ClientDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'appointments' | 'notes'>('overview');
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
   
-  useEffect(() => {
-    fetchClientDetails();
-  }, [id]);
-  
-  const fetchClientDetails = async () => {
+  const fetchClientDetails = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -54,12 +52,22 @@ const ClientDetail: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+  
+  useEffect(() => {
+    fetchClientDetails();
+  }, [fetchClientDetails]);
   
   // Format date for display
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString();
+  };
+  
+  // Get client's full name
+  const getClientName = () => {
+    if (!client) return '';
+    return `${client.user.firstName || ''} ${client.user.lastName || ''}`.trim() || 'Client';
   };
   
   if (loading) {
@@ -105,26 +113,31 @@ const ClientDetail: React.FC = () => {
   
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      {/* Header Section with New Schedule Button */}
+      <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
         <div>
-          <h2 className="text-lg font-medium text-gray-900">
+          <h2 className="text-xl font-semibold text-gray-900">
             {client.user.firstName || ''} {client.user.lastName || ''}
           </h2>
           <p className="text-sm text-gray-500">{client.user.email}</p>
         </div>
         <div className="flex space-x-2">
+          <button
+            onClick={() => setShowScheduleModal(true)}
+            className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-md shadow-sm hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <span className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Schedule Session
+            </span>
+          </button>
           <Link
             to={`/therapist/clients/${client.id}/edit`}
-            className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+            className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50"
           >
             Edit Client
-          </Link>
-          <Link
-            to={`/therapist/appointments/new?clientId=${client.id}`}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-          >
-            Schedule Session
           </Link>
         </div>
       </div>
@@ -241,7 +254,15 @@ const ClientDetail: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-sm text-gray-500 text-center py-2">No upcoming sessions</div>
+                  <div className="text-sm text-gray-500 text-center py-2">
+                    No upcoming sessions
+                    <button
+                      onClick={() => setShowScheduleModal(true)}
+                      className="mt-2 text-indigo-600 hover:text-indigo-800 block mx-auto"
+                    >
+                      Schedule Now
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -253,12 +274,12 @@ const ClientDetail: React.FC = () => {
           <div>
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium text-gray-900">Appointments History</h3>
-              <Link
-                to={`/therapist/appointments/new?clientId=${client.id}`}
+              <button
+                onClick={() => setShowScheduleModal(true)}
                 className="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700"
               >
                 Schedule New
-              </Link>
+              </button>
             </div>
             
             {client.appointments && client.appointments.length > 0 ? (
@@ -299,12 +320,12 @@ const ClientDetail: React.FC = () => {
             ) : (
               <div className="text-center py-6 bg-gray-50 rounded-lg">
                 <p className="text-gray-500">No appointments found</p>
-                <Link
-                  to={`/therapist/appointments/new?clientId=${client.id}`}
+                <button
+                  onClick={() => setShowScheduleModal(true)}
                   className="mt-3 inline-block px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
                 >
                   Schedule First Appointment
-                </Link>
+                </button>
               </div>
             )}
           </div>
@@ -360,6 +381,18 @@ const ClientDetail: React.FC = () => {
           </div>
         )}
       </div>
+      
+      {/* Schedule Session Modal */}
+      {client && client.therapist && (
+        <ScheduleSessionModal
+          isOpen={showScheduleModal}
+          onClose={() => setShowScheduleModal(false)}
+          clientId={client.id}
+          clientName={getClientName()}
+          therapistId={client.therapist.id}
+          onSessionScheduled={fetchClientDetails}
+        />
+      )}
     </div>
   );
 };
