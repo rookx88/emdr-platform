@@ -387,3 +387,19 @@ model InvitationToken {
   @@index([userId])
   @@index([expiresAt])
 }
+
+model EmailLog {
+  id            String    @id @default(uuid())
+  to            String
+  subject       String
+  templateUsed  String
+  status        String    // SENT, FAILED
+  messageId     String?
+  error         String?
+  sentAt        DateTime
+  sentBy        String
+  
+  @@index([to])
+  @@index([sentAt])
+  @@index([status])
+}

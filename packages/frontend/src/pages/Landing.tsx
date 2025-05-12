@@ -45,6 +45,7 @@ const LandingPage = () => {
         left: 0,
         right: 0,
         bottom: 0,
+        
         backgroundImage: "url('/Platformbackdrop.svg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -80,18 +81,20 @@ const LandingPage = () => {
               fontSize: '3rem',
               fontWeight: '600',
               marginBottom: '1.25rem',
-              color: '#333',
+              color: '#f1f5f9',
               lineHeight: '1.2',
-              letterSpacing: '0.5px'
+              letterSpacing: '0.5px',
+              textShadow: '2px 2px 4px rgba(47, 79, 79, 0.3)'
             }}>
-              Build Your Practice<br />with Confidence
+              Grow Your Practice. Lighten Your Load.
             </h1>
             <p style={{
               fontSize: '1.25rem',
-              color: '#333',
+              color: '#f1f5f9',
+              textShadow: '2px 2px 4px rgba(47, 79, 79, 0.5)',
               fontWeight: '400'
             }}>
-              Everything you need to be efficient and present. Nothing you don't.
+              Optimized all-purpose toolkit for private practices
             </p>
           </div>
           
@@ -128,14 +131,15 @@ const LandingPage = () => {
                 fontSize: '1.5rem',
                 fontWeight: '500',
                 marginBottom: '0.5rem',
-                color: '#333',
-                textAlign: 'center'
-              }}>Streamline</h2>
+                color: '#f1f5f9',
+                textAlign: 'center',
+                textShadow: '-0.25px -0.25px 0 #000, 0.25px -0.25px 0 #000, -0.25px 0.25px 0 #000, 0.25px 0.25px 0 #000'
+              }}>Grow</h2>
               <p style={{
                 textAlign: 'center',
                 color: '#333',
                 fontSize: '1.1rem'
-              }}>Your Schedule</p>
+              }}>Tools to build your reach and funneling clients through therapist-feedback provided workflows</p>
             </div>
             
             {/* Marketing Feature */}
@@ -161,14 +165,15 @@ const LandingPage = () => {
                 fontSize: '1.5rem',
                 fontWeight: '500',
                 marginBottom: '0.5rem',
-                color: '#333',
-                textAlign: 'center'
-              }}>Attract</h2>
+                color: '#f1f5f9',
+                textAlign: 'center',
+                textShadow: '-0.25px -0.25px 0 #000, 0.25px -0.25px 0 #000, -0.25px 0.25px 0 #000, 0.25px 0.25px 0 #000'
+              }}>Enhance</h2>
               <p style={{
                 textAlign: 'center',
                 color: '#333',
                 fontSize: '1.1rem'
-              }}>New Clients</p>
+              }}>Intuitive workflows to simplify and reduce your administrative time and improve your client experience</p>
             </div>
             
             {/* Clients Feature */}
@@ -194,14 +199,15 @@ const LandingPage = () => {
                 fontSize: '1.5rem',
                 fontWeight: '500',
                 marginBottom: '0.5rem',
-                color: '#333',
-                textAlign: 'center'
-              }}>Nurture</h2>
+                color: '#f1f5f9',
+                textAlign: 'center',
+                textShadow: '-0.25px -0.25px 0 #000, 0.25px -0.25px 0 #000, -0.25px 0.25px 0 #000, 0.25px 0.25px 0 #000'
+              }}>Powered by Elura</h2>
               <p style={{
                 textAlign: 'center',
                 color: '#333',
                 fontSize: '1.1rem'
-              }}>Client Relations</p>
+              }}>Intuitive Engine that prioritizes daily workload and runs your practice at the click of a button</p>
             </div>
           </div>
           
@@ -209,7 +215,7 @@ const LandingPage = () => {
           <Link 
             to="/register" 
             style={{
-              backgroundColor: '#d97706',
+              backgroundColor: '#15803d',
               color: 'white',
               fontSize: '1.2rem',
               padding: '0.875rem 2.5rem',

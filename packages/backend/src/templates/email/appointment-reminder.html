@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Upcoming Appointment Reminder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .header {
+      background-color: #e8f4fd;
+      padding: 20px;
+      text-align: center;
+      border-radius: 5px 5px 0 0;
+    }
+    .header h1 {
+      color: #0e4a7b;
+      margin: 0;
+      font-size: 24px;
+    }
+    .content {
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 0 0 5px 5px;
+      border: 1px solid #e8f4fd;
+    }
+    .appointment-box {
+      background-color: #f8f9fa;
+      border-left: 4px solid #0e76d7;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .button {
+      display: inline-block;
+      background-color: #0e76d7;
+      color: white;
+      padding: 12px 25px;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .reschedule-link {
+      color: #0e76d7;
+      text-decoration: underline;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #f1f1f1;
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Appointment Reminder</h1>
+    </div>
+    
+    <div class="content">
+      <p>Hello {{clientName}},</p>
+      
+      <p>This is a friendly reminder about your upcoming therapy session with {{therapistName}}.</p>
+      
+      <div class="appointment-box">
+        <p><strong>Date:</strong> {{appointmentDate}}</p>
+        <p><strong>Time:</strong> {{appointmentTime}}</p>
+        <p><strong>Type:</strong> {{appointmentType}}</p>
+        {{#if isVirtual}}
+        <p><strong>Format:</strong> Virtual Session</p>
+        {{else}}
+        <p><strong>Format:</strong> In-person Session</p>
+        <p><strong>Location:</strong> {{locationAddress}}</p>
+        {{/if}}
+      </div>
+      
+      {{#if preparationInstructions}}
+      <p><strong>Preparation Instructions:</strong></p>
+      <p>{{preparationInstructions}}</p>
+      {{/if}}
+      
+      {{#if isVirtual}}
+      <div style="text-align: center;">
+        <a href="{{sessionUrl}}" class="button">Join Session</a>
+      </div>
+      <p style="text-align: center; font-size: 13px;">
+        (Link will be active 15 minutes before your appointment)
+      </p>
+      {{/if}}
+      
+      <p>If you need to reschedule, please <a href="{{rescheduleUrl}}" class="reschedule-link">click here</a> or contact your therapist at least 24 hours before your scheduled appointment.</p>
+      
+      <div class="footer">
+        <p>This is an automated message. Please do not reply to this email.</p>
+        <p>HIPAA Notice: This email contains confidential information about your healthcare. If you received this message in error, please delete it immediately and notify us.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

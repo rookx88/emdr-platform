@@ -550,6 +550,7 @@ export const clientController = {
         include: {
           user: {
             select: {
+              id: true,
               email: true,
               firstName: true,
               lastName: true,
@@ -587,13 +588,47 @@ export const clientController = {
         });
       }
       
-      // Return basic info about the invitation
+      // Get the client profile
+      const clientProfile = await prisma.clientProfile.findFirst({
+        where: { userId: invitation.user.id }
+      });
+      
+      // Get the therapist name
+      const therapistName = clientProfile?.therapistId ? 
+        await getTherapistName(clientProfile.therapistId) : 'Your therapist';
+      
+      // Get first session if it exists
+      let sessionInfo: Appointment | null = null;
+      if (clientProfile) {
+        const firstSession = await prisma.appointment.findFirst({
+          where: {
+            clientId: clientProfile.id,
+            startTime: {
+              gte: new Date()
+            },
+            status: {
+              not: 'CANCELED'
+            }
+          },
+          orderBy: {
+            startTime: 'asc'
+          }
+        });
+        
+        if (firstSession) {
+          sessionInfo = firstSession;
+        }
+      }
+      
+      // Return enhanced information
       res.json({
         valid: true,
         email: invitation.user.email,
         firstName: invitation.user.firstName,
         lastName: invitation.user.lastName,
-        expiresAt: invitation.expiresAt
+        therapistName: therapistName,
+        expiresAt: invitation.expiresAt,
+        sessionInfo: sessionInfo
       });
     } catch (error) {
       next(error);

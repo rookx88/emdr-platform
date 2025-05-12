@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Your EMDR Therapy Journey</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .header {
+      background: linear-gradient(to right, #6366f1, #8b5cf6);
+      padding: 30px 20px;
+      text-align: center;
+      border-radius: 5px 5px 0 0;
+    }
+    .header h1 {
+      color: white;
+      margin: 0;
+      font-size: 26px;
+    }
+    .content {
+      padding: 30px 20px;
+      background-color: #ffffff;
+      border-radius: 0 0 5px 5px;
+      border: 1px solid #e5e7eb;
+    }
+    .section {
+      margin-bottom: 25px;
+    }
+    .section h2 {
+      color: #4f46e5;
+      font-size: 18px;
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    .button {
+      display: inline-block;
+      background-color: #4f46e5;
+      color: white;
+      padding: 12px 30px;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .resource-box {
+      background-color: #f9fafb;
+      border: 1px solid #e5e7eb;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 5px;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #f1f1f1;
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Welcome to Your EMDR Therapy Journey</h1>
+    </div>
+    
+    <div class="content">
+      <p>Hello {{clientName}},</p>
+      
+      <p>Thank you for completing your registration with the EMDR Therapy Platform. We're glad to have you on board and committed to supporting your therapeutic journey.</p>
+      
+      <div class="section">
+        <h2>Getting Started</h2>
+        <p>Your account is now active, and you can access the platform at any time by visiting our website or using the mobile app.</p>
+        
+        <div style="text-align: center; margin: 25px 0;">
+          <a href="{{loginUrl}}" class="button">Log In to Your Account</a>
+        </div>
+      </div>
+      
+      <div class="section">
+        <h2>Your Therapist</h2>
+        <p>You're working with {{therapistName}}, who specializes in EMDR therapy and is committed to your wellness journey.</p>
+        
+        {{#if upcomingAppointment}}
+        <p>Your first session is scheduled for {{appointmentDate}} at {{appointmentTime}}.</p>
+        {{else}}
+        <p>Please schedule your first session through the platform at your earliest convenience.</p>
+        {{/if}}
+      </div>
+      
+      <div class="section">
+        <h2>Helpful Resources</h2>
+        <p>Here are some resources to help you prepare for your EMDR therapy:</p>
+        
+        <div class="resource-box">
+          <p><strong>What to Expect in EMDR Therapy</strong></p>
+          <p>A brief introduction to the EMDR process and how it can help with trauma and other conditions.</p>
+          <a href="{{resourcesUrl}}" style="color: #4f46e5;">View in your portal →</a>
+        </div>
+      </div>
+      
+      <div class="section">
+        <h2>Privacy and Security</h2>
+        <p>Your privacy is important to us. Our platform is fully HIPAA-compliant, with state-of-the-art security measures to protect your personal health information.</p>
+        <p>All communication between you and your therapist is encrypted and stored securely.</p>
+      </div>
+      
+      <p>If you have any questions or need assistance, please don't hesitate to contact your therapist or our support team at {{supportEmail}}.</p>
+      
+      <p>We look forward to supporting you on your therapy journey.</p>
+      
+      <p>Warm regards,<br>
+      The EMDR Therapy Platform Team</p>
+      
+      <div class="footer">
+        <p>This email contains confidential information and is intended solely for {{clientName}}. If you received this message in error, please delete it and notify us immediately.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

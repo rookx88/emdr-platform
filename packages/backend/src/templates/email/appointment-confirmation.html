@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointment Confirmation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .header {
+      background-color: #edf7ed;
+      padding: 20px;
+      text-align: center;
+      border-radius: 5px 5px 0 0;
+    }
+    .header h1 {
+      color: #2e7d32;
+      margin: 0;
+      font-size: 24px;
+    }
+    .content {
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 0 0 5px 5px;
+      border: 1px solid #edf7ed;
+    }
+    .appointment-box {
+      background-color: #f8f9fa;
+      border-left: 4px solid #2e7d32;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .button {
+      display: inline-block;
+      background-color: #2e7d32;
+      color: white;
+      padding: 12px 25px;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .calendar-link {
+      color: #2e7d32;
+      text-decoration: underline;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #f1f1f1;
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Appointment Confirmed</h1>
+    </div>
+    
+    <div class="content">
+      <p>Hello {{clientName}},</p>
+      
+      <p>Your appointment with {{therapistName}} has been confirmed.</p>
+      
+      <div class="appointment-box">
+        <p><strong>Date:</strong> {{appointmentDate}}</p>
+        <p><strong>Time:</strong> {{appointmentTime}}</p>
+        <p><strong>Type:</strong> {{appointmentType}}</p>
+        {{#if isVirtual}}
+        <p><strong>Format:</strong> Virtual Session</p>
+        {{else}}
+        <p><strong>Format:</strong> In-person Session</p>
+        <p><strong>Location:</strong> {{locationAddress}}</p>
+        {{/if}}
+      </div>
+      
+      <p>Please add this appointment to your calendar:</p>
+      <div style="text-align: center;">
+        <a href="{{calendarLink}}" class="calendar-link">Add to Calendar</a>
+      </div>
+      
+      <p>You will receive a reminder email 24 hours before your appointment.</p>
+      
+      {{#if isVirtual}}
+      <p>For virtual sessions, you can join through your account or by clicking the link in the reminder email.</p>
+      {{/if}}
+      
+      <p>If you need to reschedule or cancel, please do so at least 24 hours in advance by logging into your account or contacting your therapist directly.</p>
+      
+      <div class="footer">
+        <p>This is an automated message. Please do not reply to this email.</p>
+        <p>HIPAA Notice: This email contains confidential information about your healthcare. If you received this message in error, please delete it immediately and notify us.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

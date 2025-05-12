@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to EMDR Therapy Platform</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .header {
+      background-color: #f8f2e4;
+      padding: 20px;
+      text-align: center;
+      border-radius: 5px 5px 0 0;
+    }
+    .header h1 {
+      color: #7d5a01;
+      margin: 0;
+      font-size: 24px;
+    }
+    .content {
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 0 0 5px 5px;
+      border: 1px solid #f8f2e4;
+    }
+    .button {
+      display: inline-block;
+      background-color: #e6a027;
+      color: white;
+      padding: 12px 25px;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #f1f1f1;
+      font-size: 12px;
+      color: #666;
+    }
+    .session-info {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Welcome to EMDR Therapy Platform</h1>
+    </div>
+    
+    <div class="content">
+      <p>Hello {{clientName}},</p>
+      
+      <p>{{therapistName}} has invited you to join the EMDR Therapy Platform where you'll be able to:</p>
+      
+      <ul>
+        <li>Schedule and attend virtual therapy sessions</li>
+        <li>Access resources provided by your therapist</li>
+        <li>Complete assessments and track your progress</li>
+        <li>Communicate securely with your therapist</li>
+      </ul>
+      
+      {{#if hasSession}}
+      <div class="session-info">
+        <h3 style="color: #495057; margin-top: 0;">Your First Session</h3>
+        <p style="margin-bottom: 10px;">Your therapist has scheduled your first session:</p>
+        <p><strong>Date:</strong> {{sessionDate}}</p>
+        <p><strong>Time:</strong> {{sessionTime}}</p>
+        <p><strong>Type:</strong> {{sessionType}}</p>
+      </div>
+      {{/if}}
+      
+      <div style="text-align: center;">
+        <a href="{{inviteUrl}}" class="button">Complete Your Registration</a>
+      </div>
+      
+      <p>This invitation link will expire in 7 days. If you have any questions, please contact your therapist directly.</p>
+      
+      <div class="footer">
+        <p><strong>HIPAA Compliance & Privacy:</strong> Our platform is fully HIPAA compliant and designed to protect your privacy and personal health information. All data is encrypted and securely stored.</p>
+        <p>If you did not expect this invitation, please disregard this email.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
