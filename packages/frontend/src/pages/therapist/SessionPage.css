@@ -1,0 +1,570 @@
+/* Custom styles for the Session Page - Earthy, Calming Theme */
+
+:root {
+  /* Earthy color palette */
+  --color-sand: #e6d2b5;
+  --color-clay: #b08968;
+  --color-sage: #9caf88;
+  --color-moss: #6a8d73;
+  --color-forest: #3a6351;
+  --color-earth: #4a3f35;
+  --color-stone: #d5d5d3;
+  
+  /* UI colors */
+  --bg-primary: #f8f5f2;
+  --bg-panel: #ffffff;
+  --bg-secondary: #f0ebe5;
+  --border-subtle: rgba(185, 173, 159, 0.25);
+  --border-medium: rgba(185, 173, 159, 0.5);
+  
+  /* Text colors */
+  --text-primary: #4a4039;
+  --text-secondary: #6b6359;
+  --text-light: #8c8178;
+}
+
+/* Ensure the entire screen is utilized without scrolling */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Custom styles for the panels to ensure they fit properly */
+.session-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+}
+
+.session-header {
+  background-color: var(--bg-panel);
+  border-bottom: 1px solid var(--border-subtle);
+  box-shadow: 0 2px 10px rgba(74, 63, 53, 0.03);
+  padding: 0.75rem 1.5rem;
+  z-index: 10;
+}
+
+.session-title {
+  font-weight: 500;
+  color: var(--color-earth);
+  font-size: 1.15rem;
+}
+
+.exit-button {
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.exit-button:hover {
+  background-color: var(--color-stone);
+  color: var(--text-primary);
+}
+
+.session-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  padding: 1rem;
+  gap: 1rem;
+}
+
+.panel {
+  background-color: var(--bg-panel);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(74, 63, 53, 0.05);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.panel:hover {
+  box-shadow: 0 6px 16px rgba(74, 63, 53, 0.08);
+}
+
+.panel-header {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  font-weight: 500;
+  color: var(--color-earth);
+  background-color: rgba(248, 245, 242, 0.5);
+  font-size: 0.9rem;
+}
+
+.panel-content {
+  padding: 1rem;
+  overflow: auto;
+}
+
+.video-container {
+  position: relative;
+  background-color: #2a2a2a;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(74, 63, 53, 0.12);
+}
+
+.self-view {
+  position: absolute;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  width: 25%;
+  height: 25%;
+  background-color: #3a3a3a;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.875rem;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.2s ease;
+}
+
+.self-view:hover {
+  transform: scale(1.03);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.notes-textarea {
+  width: 100%;
+  height: 85%;
+  padding: 0.8rem;
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  resize: none;
+  font-family: inherit;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.notes-textarea:focus {
+  outline: none;
+  border-color: var(--color-clay);
+  box-shadow: 0 0 0 2px rgba(176, 137, 104, 0.2);
+}
+
+.save-button {
+  background-color: var(--color-moss);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.save-button:hover {
+  background-color: var(--color-forest);
+  transform: translateY(-1px);
+}
+
+.command-button {
+  width: 100%;
+  padding: 0.75rem 0;
+  background-color: var(--color-clay);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(176, 137, 104, 0.2);
+}
+
+.command-button:hover {
+  background-color: #a07958;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(176, 137, 104, 0.3);
+}
+
+.command-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(176, 137, 104, 0.3);
+}
+
+/* Schedule Modal */
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  border-radius: 10px;
+}
+
+.modal-content {
+  background-color: var(--bg-panel);
+  padding: 1rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 90%;
+  max-height: 90%;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.modal-title {
+  font-weight: 600;
+  color: var(--color-earth);
+  font-size: 1.1rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-light);
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.form-input, .form-select {
+  padding: 0.5rem;
+  border: 1px solid var(--border-medium);
+  border-radius: 4px;
+  background-color: var(--bg-secondary);
+  font-size: 0.9rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.btn-cancel {
+  padding: 0.4rem 1rem;
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btn-submit {
+  padding: 0.4rem 1rem;
+  background-color: var(--color-moss);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* Ensure all columns are properly sized */
+.column-left {
+  width: 25%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.column-center {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.column-right {
+  width: 25%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* For the transcript and AI notes that should be equal height */
+.split-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.split-panel-content {
+  flex: 1;
+  overflow: auto;
+  padding: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* For video that should take up more space than notes */
+.video-panel {
+  flex: 3;
+}
+
+.notes-panel {
+  flex: 2;
+}
+
+/* For the bilateral stimulation panel */
+.bilateral-panel {
+  flex: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.command-panel {
+  flex: 1;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-clay);
+  border-radius: 8px;
+  opacity: 0.7;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-earth);
+}
+
+/* Animation for the bilateral stimulation indicator */
+@keyframes breathe {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(156, 175, 136, 0.7);
+    opacity: 0.8;
+  }
+  
+  50% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(156, 175, 136, 0);
+    opacity: 1;
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(156, 175, 136, 0);
+    opacity: 0.8;
+  }
+}
+
+.bilateral-indicator {
+  width: 4rem;
+  height: 4rem;
+  background-color: var(--color-sage);
+  border-radius: 50%;
+  animation: breathe 3s infinite ease-in-out;
+}
+
+/* Video controls */
+.video-controls {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1rem;
+  background-color: rgba(42, 42, 42, 0.6);
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  backdrop-filter: blur(4px);
+}
+
+.video-control-button {
+  background: none;
+  border: none;
+  color: white;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.video-control-button:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.video-control-button.end {
+  background-color: rgba(220, 53, 69, 0.7);
+}
+
+.video-control-button.end:hover {
+  background-color: rgba(220, 53, 69, 0.9);
+}
+
+/* Fancy styling for the bilateral stimulation */
+.bilateral-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8f7f6 0%, #e6e4e1 100%);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.bilateral-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(156, 175, 136, 0.2) 0%, rgba(156, 175, 136, 0) 70%);
+  opacity: 0.5;
+  transform: scale(1.2);
+  animation: pulse-bg 6s infinite ease-in-out;
+}
+
+@keyframes pulse-bg {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1.1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.3);
+  }
+}
+
+.bilateral-dot {
+  width: 24px;
+  height: 24px;
+  background-color: var(--color-forest);
+  border-radius: 50%;
+  position: absolute;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 8px rgba(58, 99, 81, 0.3);
+}
+
+/* Loading and error states */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: var(--bg-primary);
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--border-medium);
+  border-top-color: var(--color-clay);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  margin-top: 1rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: var(--bg-primary);
+  padding: 2rem;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 3rem;
+  color: #dc3545;
+  margin-bottom: 1rem;
+}
+
+.error-message {
+  color: #dc3545;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+}
+
+.error-button {
+  background-color: var(--color-clay);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.error-button:hover {
+  background-color: #a07958;
+  transform: translateY(-1px);
+}

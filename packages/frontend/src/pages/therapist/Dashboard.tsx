@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import dashboardBackground from '../../assets/Dashboardbackdrop.svg';
+
 
 const TherapistDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -114,19 +116,19 @@ const TherapistDashboard: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex-grow mr-4">
         {/* Header with greeting */}
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6" style={{ fontFamily: "'Playfair Display', serif" }}>
           {getGreeting()}, {user?.firstName || 'Therapist'}
         </h1>
         
         {/* Specialty Updates Section - Purple area in mockup */}
-        <div className="bg-purple-500 rounded-lg p-4 mb-6">
-          <h2 className="text-lg font-semibold text-white mb-2">Latest in EMDR Therapy</h2>
+        <div className="bg-[#f0d890] border-2 border-[#e6c870] rounded-lg p-4 mb-6 shadow-md">
+          <h2 className="text-lg font-semibold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif", textShadow: '-1px -1px 0 #B8860B, 1px -1px 0 #B8860B, -1px 1px 0 #B8860B, 1px 1px 0 #B8860B' }}>Latest in Therapy</h2>
           <div className="space-y-3">
             {specialtyUpdates.map(update => (
-              <div key={update.id} className="bg-purple-300 bg-opacity-50 p-3 rounded">
-                <h3 className="font-medium text-white">{update.title}</h3>
-                <p className="text-white mt-1">{update.content}</p>
-                <p className="text-sm text-purple-100 mt-1">Source: {update.source}</p>
+              <div key={update.id} className="bg-[#f1f5f9] border border-[#e6c870] p-3 rounded">
+                <h3 className="font-medium text-black" style={{ fontFamily: "'Playfair Display', serif" }}>{update.title}</h3>
+                <p className="text-black mt-1" style={{ fontFamily: "'Playfair Display', serif" }}>{update.content}</p>
+                <p className="text-sm text-black-100 mt-1" style={{ fontFamily: "'Playfair Display', serif" }}>Source: {update.source}</p>
               </div>
             ))}
           </div>
@@ -188,7 +190,7 @@ const TherapistDashboard: React.FC = () => {
       </div>
       
       {/* Right Sidebar */}
-<div className={`bg-yellow-100 rounded-lg transition-all duration-300 flex ${sidebarExpanded ? 'w-64' : 'w-8'}`}>
+<div className={`bg-blue-100/30 border border-blue-200 rounded-lg transition-all duration-300 flex ${sidebarExpanded ? 'w-64' : 'w-8'}`}>
   {/* This is the main sidebar content that shows/hides */}
   {sidebarExpanded && (
     <div className="flex-grow p-4">
@@ -219,6 +221,21 @@ const TherapistDashboard: React.FC = () => {
     </button>
   </div>
 </div>
+
+      {/* Background Image */}
+      
+      <div 
+  style={{
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'linear-gradient(to top, #FFFFFF, #FFF5E6)', // Gradient from white to egg color
+    zIndex: -1 // Set to negative to ensure it stays behind other content
+  }} 
+/>
+
     </div>
   );
 };

@@ -19,12 +19,14 @@ const Footer = () => {
     <footer style={{
       width: '100%',
       padding: '1rem',
-      backgroundColor: 'rgba(250, 248, 246, 0.78)',
-      backdropFilter: 'blur(4px)',
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      backdropFilter: 'blur(8px)',
+      borderTop: '1px solid rgba(255, 255, 255, 0.2)',
       color: '#4b5563',
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'center'
+      alignItems: 'center',
+      boxShadow: '0 -1px 3px rgba(0, 0, 0, 0.1)'
     }}>
       {/* Links row */}
       <div style={{

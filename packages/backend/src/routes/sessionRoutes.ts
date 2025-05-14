@@ -310,4 +310,41 @@ router.get('/notes/:sessionId', authenticate, async (req, res, next) => {
   }
 });
 
+router.get('/:id', authenticate, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    // Find the session
+    const session = await prisma.session.findUnique({
+      where: { id },
+      include: {
+        // Include any related data you need
+        sessionNotes: true,
+      }
+    });
+    
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+    
+    // Check if user has access to this session (creator or admin)
+    if (req.user!.role !== 'ADMIN' && session.creatorId !== req.user!.userId) {
+      return res.status(403).json({ message: 'Unauthorized to access this session' });
+    }
+    
+    // Log session access
+    await createAuditLog(
+      req.user!.userId,
+      'VIEW_SESSION',
+      'Session',
+      id,
+      {}
+    );
+    
+    res.json(session);
+  } catch (error) {
+    console.error('Error retrieving session:', error);
+    next(error);
+  }
+});
 export default router;

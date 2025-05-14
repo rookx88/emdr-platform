@@ -41,25 +41,46 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       display: 'flex', 
       flexDirection: 'column',
       minHeight: '100vh',
-      backgroundColor: '#f9fafb'  // Light gray background
+      position: 'relative',
+      backgroundColor: 'transparent'
     }}>
-      <Navbar />
-      {!noSidebar && <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />}
+      {/* Background Image */}
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: "url('/Dashboardbackdrop.svg')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          zIndex: 0
+        }} 
+      />
       
-      <main style={{
-        marginLeft: noSidebar ? '0' : (sidebarCollapsed ? '60px' : '200px'),
-        marginTop: '50px',  // Match navbar height
-        padding: noSidebar ? '0' : '20px',
-        transition: 'margin-left 0.3s ease',
-        flexGrow: 1,
-        width: fullWidth || noSidebar ? '100%' : 'auto'
-      }}>
-        <div className={fullWidth || noSidebar ? 'full-width-content' : 'standard-content'}>
-          {children}
-        </div>
-      </main>
-      
-      {!noSidebar && <Footer />}
+      {/* Content */}
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <Navbar />
+        {!noSidebar && <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />}
+        
+        <main style={{
+          marginLeft: noSidebar ? '0' : (sidebarCollapsed ? '60px' : '200px'),
+          marginTop: '50px',
+          padding: noSidebar ? '0' : '20px',
+          transition: 'margin-left 0.3s ease',
+          flexGrow: 1,
+          width: fullWidth || noSidebar ? '100%' : 'auto',
+          position: 'relative'
+        }}>
+          <div className={fullWidth || noSidebar ? 'full-width-content' : 'standard-content'}>
+            {children}
+          </div>
+        </main>
+        
+        {!noSidebar && <Footer />}
+      </div>
     </div>
   );
 };

@@ -1,220 +1,180 @@
-// packages/frontend/src/components/therapist/BilateralSimulation.tsx
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useSession } from '../../context/SessionContext';
+import React, { useState, useEffect, useRef } from 'react';
 
-const BilateralStimulation: React.FC = () => {
-  const {
-    bilateralActive,
-    toggleBilateralStimulation,
-    setBilateralSpeed
-  } = useSession();
+interface BilateralSimulationProps {
+  active: boolean;
+  speed: number; // Speed in milliseconds per cycle
+  direction: 'horizontal' | 'vertical' | 'diagonal';
+  onSpeedChange?: (speed: number) => void;
+  onDirectionChange?: (direction: 'horizontal' | 'vertical' | 'diagonal') => void;
+}
+
+const BilateralSimulation: React.FC<BilateralSimulationProps> = ({
+  active = false,
+  speed = 1000,
+  direction = 'horizontal',
+  onSpeedChange,
+  onDirectionChange
+}) => {
+  const [position, setPosition] = useState(0);
+  const [isRunning, setIsRunning] = useState(active);
+  const containerRef = useRef<HTMLDivElement>(null);
   
-  // State for visualization
-  const [currentPosition, setCurrentPosition] = useState(0);
-  const [direction, setDirection] = useState<'right' | 'left'>('right');
-  const [isFlashing, setIsFlashing] = useState({
-    left: false,
-    right: false
-  });
-
-  // Settings
-  const [settings, setSettings] = useState({
-    speed: 0.5,
-    leftColor: '#FFD700', // Golden yellow
-    rightColor: '#00BFFF', // Deep sky blue
-  });
-
-  // Refs for animation and measurements
-  const animationFrameRef = useRef<number | null>(null);
-  const lineRef = useRef<HTMLDivElement>(null);
-  const dotRef = useRef<HTMLDivElement>(null);
-
-  // Smooth animation handler
-  const animateStimulation = useCallback(() => {
-    if (!bilateralActive || !lineRef.current || !dotRef.current) return;
-
-    const lineElement = lineRef.current;
-    const dotElement = dotRef.current;
+  // Control the movement of the stimulus
+  useEffect(() => {
+    if (!isRunning) return;
     
-    // Calculate available movement space
-    const lineWidth = lineElement.offsetWidth - dotElement.offsetWidth;
-    const maxTravel = lineWidth * 1;
-
-    setCurrentPosition(prev => {
-      const speedAdjustment = settings.speed * 5;
-      let newPos = direction === 'right' 
-        ? prev + speedAdjustment 
-        : prev - speedAdjustment;
-      
-      // Change direction at endpoints with flash
-      if (newPos >= maxTravel) {
-        setDirection('left');
-        newPos = maxTravel;
-        // Flash right endpoint
-        setIsFlashing(prev => ({ ...prev, right: true }));
-        setTimeout(() => {
-          setIsFlashing(prev => ({ ...prev, right: false }));
-        }, 150);
-      } else if (newPos <= 0) {
-        setDirection('right');
-        newPos = 0;
-        // Flash left endpoint
-        setIsFlashing(prev => ({ ...prev, left: true }));
-        setTimeout(() => {
-          setIsFlashing(prev => ({ ...prev, left: false }));
-        }, 150);
-      }
-
-      return newPos;
-    });
-
-    animationFrameRef.current = requestAnimationFrame(animateStimulation);
-  }, [bilateralActive, settings.speed, direction]);
-
-  // Animation effect management
+    const intervalId = setInterval(() => {
+      setPosition(prev => {
+        // Calculate next position based on current position
+        // For simplicity, oscillate between 0 and 100
+        if (prev >= 100) return 0;
+        return prev + 5; // Step size
+      });
+    }, speed / 20); // Divide by 20 to make the movement smoother
+    
+    return () => clearInterval(intervalId);
+  }, [isRunning, speed]);
+  
+  // Update isRunning when active prop changes
   useEffect(() => {
-    if (bilateralActive) {
-      animationFrameRef.current = requestAnimationFrame(animateStimulation);
-    } else {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      setCurrentPosition(0);
-      setDirection('right');
+    setIsRunning(active);
+  }, [active]);
+  
+  const handleToggle = () => {
+    setIsRunning(prev => !prev);
+  };
+  
+  const handleSpeedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newSpeed = parseInt(e.target.value);
+    if (onSpeedChange) {
+      onSpeedChange(newSpeed);
     }
-
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [bilateralActive, animateStimulation]);
-
-  // Update session context when settings change
-  useEffect(() => {
-    setBilateralSpeed(settings.speed);
-  }, [settings.speed, setBilateralSpeed]);
-
+  };
+  
+  const handleDirectionChange = (newDirection: 'horizontal' | 'vertical' | 'diagonal') => {
+    if (onDirectionChange) {
+      onDirectionChange(newDirection);
+    }
+  };
+  
+  // Calculate stimulus position based on direction
+  const getStimulusStyle = () => {
+    // Calculate position based on direction
+    switch (direction) {
+      case 'horizontal':
+        return {
+          left: `${position}%`,
+          top: '50%',
+          transform: 'translate(-50%, -50%)'
+        };
+      case 'vertical':
+        return {
+          top: `${position}%`,
+          left: '50%',
+          transform: 'translate(-50%, -50%)'
+        };
+      case 'diagonal':
+        return {
+          top: `${position}%`,
+          left: `${position}%`,
+          transform: 'translate(-50%, -50%)'
+        };
+      default:
+        return {
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)'
+        };
+    }
+  };
+  
   return (
-    <div className="h-full flex flex-col">
-      <h1 className="text-2xl font-bold text-center mb-6">Bilateral Stimulation</h1>
-      
-      {/* Visual stimulation - main visualization */}
-      <div className="w-full h-24 my-6 relative flex items-center justify-center">
-        {/* Left circle */}
-        <div 
-          className={`w-16 h-16 rounded-full transition-all duration-150 ease-out ${
-            isFlashing.left ? 'opacity-100 shadow-2xl' : 'opacity-50'
+    <div className="w-full h-full p-3">
+      <div className="mb-2 flex justify-between items-center">
+        <h3 className="text-sm font-medium text-[var(--color-earth)]">Bilateral Stimulation</h3>
+        <button
+          onClick={handleToggle}
+          className={`px-3 py-1 text-xs rounded transition-all ${
+            isRunning 
+              ? 'bg-[var(--color-clay)] text-white' 
+              : 'bg-[var(--color-sage)] text-white'
           }`}
-          style={{ 
-            backgroundColor: settings.leftColor,
-            boxShadow: isFlashing.left 
-              ? `0 0 30px 10px ${settings.leftColor}` 
-              : 'none'
-          }}
-        />
-
-        {/* Stationary line container */}
-        <div 
-          ref={lineRef}
-          className="mx-4 h-1 bg-gray-300 flex-grow" 
         >
-          {/* Moving dot */}
-          <div 
-            ref={dotRef}
-            className="absolute top-1/2 w-1 h-1 rounded-full bg-gray-400 transform -translate-y-1/2" 
-            style={{ 
-              left: `calc(${currentPosition}px + ${(16 + 16)}px)`, // Adjust for left circle width and padding
-              opacity: 0.3
-            }}
-          />
-        </div>
-
-        {/* Right circle */}
-        <div 
-          className={`w-16 h-16 rounded-full transition-all duration-150 ease-out ${
-            isFlashing.right ? 'opacity-100 shadow-2xl' : 'opacity-50'
-          }`}
-          style={{ 
-            backgroundColor: settings.rightColor,
-            boxShadow: isFlashing.right 
-              ? `0 0 30px 10px ${settings.rightColor}` 
-              : 'none'
-          }}
-        />
+          {isRunning ? 'Stop' : 'Start'}
+        </button>
       </div>
       
-      {/* Controls section with light blue background */}
-      <div className="bg-blue-100 p-6 rounded-lg flex-grow">
-        <div className="max-w-md mx-auto space-y-4">
-          <div className="flex items-center justify-between">
-            <label className="font-medium text-right w-1/3 pr-4">Movement Speed</label>
-            <div className="w-2/3 flex items-center">
-              <input 
-                type="range"
-                min="0.1"
-                max="1"
-                step="0.1"
-                value={settings.speed}
-                onChange={(e) => setSettings(prev => ({
-                  ...prev, 
-                  speed: parseFloat(e.target.value)
-                }))}
-                className="flex-grow mr-2"
-                disabled={bilateralActive}
-              />
-              <span className="w-24 text-right">{settings.speed.toFixed(1)} units/sec</span>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <label className="font-medium text-right w-1/3 pr-4">Left Side Color</label>
-            <div className="w-2/3">
-              <input 
-                type="color"
-                value={settings.leftColor}
-                onChange={(e) => setSettings(prev => ({
-                  ...prev, 
-                  leftColor: e.target.value
-                }))}
-                disabled={bilateralActive}
-              />
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <label className="font-medium text-right w-1/3 pr-4">Right Side Color</label>
-            <div className="w-2/3">
-              <input 
-                type="color"
-                value={settings.rightColor}
-                onChange={(e) => setSettings(prev => ({
-                  ...prev, 
-                  rightColor: e.target.value
-                }))}
-                disabled={bilateralActive}
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-center mt-4">
-            <button 
-              onClick={toggleBilateralStimulation}
-              className="border border-gray-300 bg-gray-100 hover:bg-gray-200 text-black py-2 px-4 rounded"
+      {/* Stimulus container */}
+      <div className="bilateral-container">
+        <div className="bilateral-bg"></div>
+        <div 
+          ref={containerRef}
+          className="relative flex-1 rounded-lg mb-2 overflow-hidden"
+          style={{ minHeight: "180px" }}
+        >
+          <div className="bilateral-dot" style={getStimulusStyle()}></div>
+        </div>
+      </div>
+      
+      {/* Controls */}
+      <div className="space-y-3 mt-2">
+        {/* Speed control */}
+        <div>
+          <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            Speed: {speed}ms
+          </label>
+          <input
+            type="range"
+            min="500"
+            max="2000"
+            step="100"
+            value={speed}
+            onChange={handleSpeedChange}
+            className="w-full h-2 bg-[var(--bg-secondary)] rounded-lg appearance-none cursor-pointer accent-[var(--color-clay)]"
+          />
+        </div>
+        
+        {/* Direction control */}
+        <div>
+          <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
+            Direction
+          </label>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => handleDirectionChange('horizontal')}
+              className={`px-2 py-1 text-xs rounded transition-all ${
+                direction === 'horizontal' 
+                  ? 'bg-[var(--color-clay)] text-white' 
+                  : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
+              }`}
             >
-              {bilateralActive ? 'Stop' : 'Start'} Stimulation
+              Horizontal
+            </button>
+            <button
+              onClick={() => handleDirectionChange('vertical')}
+              className={`px-2 py-1 text-xs rounded transition-all ${
+                direction === 'vertical' 
+                  ? 'bg-[var(--color-clay)] text-white' 
+                  : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
+              }`}
+            >
+              Vertical
+            </button>
+            <button
+              onClick={() => handleDirectionChange('diagonal')}
+              className={`px-2 py-1 text-xs rounded transition-all ${
+                direction === 'diagonal' 
+                  ? 'bg-[var(--color-clay)] text-white' 
+                  : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
+              }`}
+            >
+              Diagonal
             </button>
           </div>
         </div>
-      </div>
-      
-      <div className="mt-4 text-center">
-        <p className="text-sm">
-          Disclaimer: This is a simulation and should not replace professional EMDR therapy.
-        </p>
       </div>
     </div>
   );
 };
 
-export default BilateralStimulation;
+export default BilateralSimulation;

@@ -23,22 +23,27 @@ const Navbar: React.FC<NavbarProps> = ({ isLanding = false }) => {
       left: 0,
       right: 0,
       height: '50px',
-      backgroundColor: 'white',
-      borderBottom: '1px solid #e5e7eb',
+      backgroundColor: 'rgba(255, 255, 255, 0.1)', // More transparent
+      backdropFilter: 'blur(4px)', // Add blur effect
+      borderBottom: '1px solid rgba(255, 255, 255, 0.2)', // Feint border
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '0 20px',
-      zIndex: 100  // Higher than sidebar
+      zIndex: 100,
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' // Subtle shadow
     }}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <Link to="/" style={{
           textDecoration: 'none',
-          color: '#4338ca', // Indigo color
-          fontWeight: 'bold',
-          fontSize: '16px'
+          color: '#f1f5f9', // Off white
+          textShadow: '2px 2px 4px rgba(20, 83, 45, 0.5)', // Dark green shadow
+          fontFamily: "'Playfair Display', serif", // Elegant font - make sure to import this in your index.html
+          fontSize: '35px', // Bigger font size
+          fontWeight: '500', // Slightly lighter weight for elegance
+          letterSpacing: '1px' // Add slight letter spacing
         }}>
-          EMDR Therapy Platform
+          Mana
         </Link>
         
         {isLanding && (

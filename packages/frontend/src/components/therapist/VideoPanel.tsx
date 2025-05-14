@@ -3,6 +3,13 @@ import React, { useEffect, useRef } from 'react';
 import { useSession } from '../../context/SessionContext';
 import { RemoteParticipant, RemoteTrackPublication } from 'twilio-video';
 
+// Define interfaces to match Twilio's actual track objects
+interface TwilioTrack {
+  kind: string;
+  attach: () => HTMLMediaElement;
+  detach: () => HTMLMediaElement[];
+}
+
 interface VideoPanelProps {
   isTherapist: boolean;
   isConnecting?: boolean;
@@ -18,58 +25,65 @@ const VideoPanel: React.FC<VideoPanelProps> = ({
 }) => {
   const { localTracks } = useSession();
   const videoRef = useRef<HTMLDivElement>(null);
-  const attachedRef = useRef<boolean>(false);
   
   // For therapist video (local tracks)
   useEffect(() => {
     if (isTherapist && localTracks.length > 0 && videoRef.current) {
-      // Prevent duplicate attachments
-      if (attachedRef.current) {
-        return;
-      }
-      
       // First clear any existing elements
       while (videoRef.current.firstChild) {
         videoRef.current.removeChild(videoRef.current.firstChild);
       }
       
       // Then attach new tracks
-      let videoAttached = false;
-      
       localTracks.forEach(track => {
-        // Type casting for LocalTrack
-        const trackWithProperties = track as unknown as { 
-          kind?: string;
-          attach?: () => HTMLMediaElement;
-          mediaStreamTrack?: MediaStreamTrack;
-        };
+        // Cast to TwilioTrack to access the properties we need
+        const twilioTrack = track as unknown as TwilioTrack;
         
-        if (trackWithProperties.kind === 'video' && typeof trackWithProperties.attach === 'function' && !videoAttached) {
-          const element = trackWithProperties.attach();
-          element.style.width = '100%';
-          element.style.height = '100%';
-          element.style.objectFit = 'cover';
-          videoRef.current?.appendChild(element);
-          videoAttached = true;
-          attachedRef.current = true;
+        // Skip if not a video track
+        if (twilioTrack.kind !== 'video') return;
+        
+        try {
+          const element = twilioTrack.attach();
+          if (element) {
+            element.style.width = '100%';
+            element.style.height = '100%';
+            element.style.objectFit = 'cover';
+            videoRef.current?.appendChild(element);
+          }
+        } catch (err) {
+          console.error('Error attaching local video track:', err);
         }
       });
     }
     
+    // Clean up on unmount
     return () => {
-      // Reset the attachment flag on cleanup
-      attachedRef.current = false;
+      if (videoRef.current) {
+        // Clear all child elements
+        while (videoRef.current.firstChild) {
+          videoRef.current.removeChild(videoRef.current.firstChild);
+        }
+        
+        // Detach tracks (this just detaches from DOM elements, doesn't stop tracks)
+        if (isTherapist && localTracks.length > 0) {
+          localTracks.forEach(track => {
+            try {
+              const twilioTrack = track as unknown as TwilioTrack;
+              if (twilioTrack.kind === 'video') {
+                twilioTrack.detach();
+              }
+            } catch (err) {
+              console.error('Error detaching track:', err);
+            }
+          });
+        }
+      }
     };
   }, [isTherapist, localTracks]);
   
   // For client video (remote participants)
   useEffect(() => {
     if (!isTherapist && participants && videoRef.current) {
-      // Prevent duplicate attachments
-      if (attachedRef.current) {
-        return;
-      }
-      
       // Clear previous content
       while (videoRef.current.firstChild) {
         videoRef.current.removeChild(videoRef.current.firstChild);
@@ -81,35 +95,56 @@ const VideoPanel: React.FC<VideoPanelProps> = ({
         const participant = participants.values().next().value;
         
         if (participant) {
-          let videoAttached = false;
-          
           // Attach video tracks from this participant
           participant.videoTracks.forEach((publication: RemoteTrackPublication) => {
-            if (publication.track && !videoAttached) {
-              const trackWithProperties = publication.track as unknown as { 
-                kind?: string;
-                attach?: () => HTMLMediaElement;
-              };
-              
-              if (typeof trackWithProperties.attach === 'function') {
-                const element = trackWithProperties.attach();
+            try {
+              if (publication.track) {
+                const track = publication.track as unknown as TwilioTrack;
+                if (track.kind === 'video') {
+                  const element = track.attach();
+                  element.style.width = '100%';
+                  element.style.height = '100%';
+                  element.style.objectFit = 'cover';
+                  videoRef.current?.appendChild(element);
+                }
+              }
+            } catch (err) {
+              console.error('Error attaching remote video track:', err);
+            }
+          });
+          
+          // Add track subscription handler for future video tracks
+          const handleTrackSubscribed = (track: any) => {
+            try {
+              const twilioTrack = track as unknown as TwilioTrack;
+              if (twilioTrack.kind === 'video' && videoRef.current) {
+                const element = twilioTrack.attach();
                 element.style.width = '100%';
                 element.style.height = '100%';
                 element.style.objectFit = 'cover';
-                videoRef.current?.appendChild(element);
-                videoAttached = true;
-                attachedRef.current = true;
+                videoRef.current.appendChild(element);
+              }
+            } catch (err) {
+              console.error('Error attaching subscribed video track:', err);
+            }
+          };
+          
+          participant.on('trackSubscribed', handleTrackSubscribed);
+          
+          // Return cleanup function
+          return () => {
+            participant.off('trackSubscribed', handleTrackSubscribed);
+            
+            // Detach any attached tracks
+            if (videoRef.current) {
+              while (videoRef.current.firstChild) {
+                videoRef.current.removeChild(videoRef.current.firstChild);
               }
             }
-          });
+          };
         }
       }
     }
-    
-    return () => {
-      // Reset the attachment flag on cleanup
-      attachedRef.current = false;
-    };
   }, [isTherapist, participants]);
   
   // Different background colors and styling for the video containers

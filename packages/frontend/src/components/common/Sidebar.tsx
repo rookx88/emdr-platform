@@ -235,7 +235,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       top: 0,
       bottom: 0,
       width: collapsed ? '60px' : '200px',
-      backgroundColor: '#1f2937', // Dark blue/gray
+      backgroundColor: '#93A5CF', // Dark lavender
       color: 'white',
       zIndex: 50, // Below navbar
       paddingTop: '60px', // Space for header
