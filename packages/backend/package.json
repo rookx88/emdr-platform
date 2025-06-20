@@ -27,7 +27,8 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^7.0.3",
-    "twilio": "^5.5.2"
+    "twilio": "^5.5.2",
+    "axios": "^1.9.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
