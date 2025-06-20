@@ -2,6 +2,7 @@ import axios from 'axios';
 import { prisma } from '../lib/prisma';
 import { phiVaultService } from './encryption/phiVaultService';
 import { createAuditLog } from '../utils/auditLog';
+import { emailDraftService } from './emailDraftService';
 
 export interface InsuranceInfo {
   fullName: string;
@@ -11,6 +12,8 @@ export interface InsuranceInfo {
   groupNumber?: string;
   cardFrontImage?: string;
   cardBackImage?: string;
+  gmailToken?: string;
+  outlookToken?: string;
 }
 
 export interface VerificationResult {
@@ -21,6 +24,10 @@ export interface VerificationResult {
   allowedVisits?: number | null;
   telehealthCovered?: boolean | null;
   preAuthRequired?: boolean | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  draftId?: string | null;
+  mailtoLink?: string | null;
   summary: string;
   raw: any;
   changes?: Record<string, any> | null;
@@ -28,6 +35,20 @@ export interface VerificationResult {
 
 const CLEARINGHOUSE_URL = process.env.CLEARINGHOUSE_URL || '';
 const CLEARINGHOUSE_API_KEY = process.env.CLEARINGHOUSE_API_KEY || '';
+
+export interface ContactInfo {
+  email?: string | null;
+  phone?: string | null;
+}
+
+export function extractContactInfo(raw271: string): ContactInfo {
+  const emailMatch = raw271.match(/PER\*[^*]*\*[^*]*\*(?:TE\*[^*~]+)?\*EM\*([^*~]+)/);
+  const phoneMatch = raw271.match(/PER\*[^*]*\*[^*]*\*TE\*([0-9]+)/);
+  return {
+    email: emailMatch ? emailMatch[1] : null,
+    phone: phoneMatch ? phoneMatch[1] : null
+  };
+}
 
 async function callClearinghouse(info: InsuranceInfo): Promise<any> {
   // In a real implementation, this would send a 270 request and parse the 271 response.
@@ -98,7 +119,7 @@ export const insuranceVerificationService = {
       where: { clientId },
       orderBy: { createdAt: 'desc' }
     });
-    const now = new Date();
+  const now = new Date();
     if (last && now.getTime() - last.createdAt.getTime() < 1000 * 60 * 60 * 24 * 30) {
       return {
         active: last.status === 'ACTIVE',
@@ -108,6 +129,10 @@ export const insuranceVerificationService = {
         allowedVisits: last.allowedVisits,
         telehealthCovered: last.telehealthCovered,
         preAuthRequired: last.preAuthRequired,
+        contactEmail: last.rawResponse?.contactEmail ?? null,
+        contactPhone: last.rawResponse?.contactPhone ?? null,
+        draftId: null,
+        mailtoLink: null,
         summary: buildSummary({
           active: last.status === 'ACTIVE',
           deductibleRemaining: last.deductibleRemaining,
@@ -125,6 +150,8 @@ export const insuranceVerificationService = {
     }
 
     const response = await callClearinghouse(info);
+    const rawStr = typeof response === 'string' ? response : JSON.stringify(response);
+    const contactInfo = extractContactInfo(rawStr);
 
     const result: VerificationResult = {
       active: !!response.active,
@@ -134,10 +161,28 @@ export const insuranceVerificationService = {
       allowedVisits: response.allowedVisits ?? null,
       telehealthCovered: response.telehealthCovered ?? null,
       preAuthRequired: response.preAuthRequired ?? null,
+      contactEmail: contactInfo.email ?? null,
+      contactPhone: contactInfo.phone ?? null,
+      draftId: null,
+      mailtoLink: null,
       summary: '',
       raw: response,
       changes: null
     };
+
+    const incomplete =
+      result.telehealthCovered === null || result.allowedVisits === null;
+    if (incomplete && (contactInfo.email || contactInfo.phone)) {
+      const draft = await emailDraftService.createDraft({
+        to: contactInfo.email || 'unknown@example.com',
+        subject: 'Coverage confirmation request',
+        body: `Hello,\n\nPlease confirm mental health and telehealth coverage for Member ID ${info.memberId} (DOB ${info.dateOfBirth}).\n\nTherapist NPI: \n`,
+        gmailToken: (info as any).gmailToken,
+        outlookToken: (info as any).outlookToken
+      });
+      result.draftId = draft.id ?? null;
+      result.mailtoLink = draft.mailto ?? null;
+    }
 
     const changes: Record<string, any> = {};
     if (last) {
