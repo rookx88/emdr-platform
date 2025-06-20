@@ -401,5 +401,29 @@ model EmailLog {
   
   @@index([to])
   @@index([sentAt])
+
   @@index([status])
+
+}
+model InsuranceVerification {
+  id                 String    @id @default(uuid())
+  clientId           String
+  client             ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  verifiedBy         String
+  user               User      @relation(fields: [verifiedBy], references: [id])
+  status             String
+  deductibleRemaining Int?
+  copay              Int?
+  coinsurance        Int?
+  allowedVisits      Int?
+  telehealthCovered  Boolean?
+  preAuthRequired    Boolean?
+  rawResponse        Json?
+  changes            Json?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([clientId])
+  @@index([verifiedBy])
+  @@index([createdAt])
 }
