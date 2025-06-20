@@ -1,4 +1,4 @@
-import { insuranceVerificationService } from '../services/insuranceVerificationService';
+import { insuranceVerificationService, extractContactInfo } from '../services/insuranceVerificationService';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -22,5 +22,12 @@ describe('Insurance Verification Service', () => {
     });
     expect(result).toBeDefined();
     expect(result.summary).toContain('Client is covered');
+  });
+
+  test('extracts contact info from 271', () => {
+    const sample = 'PER*IC*CUSTOMER SERVICE*TE*8005551212*EM*support@payer.com~';
+    const info = extractContactInfo(sample);
+    expect(info.email).toBe('support@payer.com');
+    expect(info.phone).toBe('8005551212');
   });
 });
