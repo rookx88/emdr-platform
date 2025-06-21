@@ -459,4 +459,3 @@ model MagicCode {
   @@index([userId])
 }
 
-

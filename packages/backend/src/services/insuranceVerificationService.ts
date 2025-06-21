@@ -1,5 +1,8 @@
 import axios from 'axios';
 import { prisma } from '../lib/prisma';
+
+import { Prisma } from '@prisma/client';
+
 import { phiVaultService } from './encryption/phiVaultService';
 import { createAuditLog } from '../utils/auditLog';
 import { emailDraftService } from './emailDraftService';
@@ -129,8 +132,10 @@ export const insuranceVerificationService = {
         allowedVisits: last.allowedVisits,
         telehealthCovered: last.telehealthCovered,
         preAuthRequired: last.preAuthRequired,
-        contactEmail: last.rawResponse?.contactEmail ?? null,
-        contactPhone: last.rawResponse?.contactPhone ?? null,
+
+        contactEmail: (last.rawResponse as any)?.contactEmail ?? null,
+        contactPhone: (last.rawResponse as any)?.contactPhone ?? null,
+
         draftId: null,
         mailtoLink: null,
         summary: buildSummary({
@@ -208,8 +213,10 @@ export const insuranceVerificationService = {
         allowedVisits: result.allowedVisits ?? null,
         telehealthCovered: result.telehealthCovered ?? null,
         preAuthRequired: result.preAuthRequired ?? null,
-        rawResponse: result.raw,
-        changes: result.changes
+
+        rawResponse: result.raw as Prisma.InputJsonValue,
+        changes: result.changes as Prisma.InputJsonValue | null
+
       }
     });
 
