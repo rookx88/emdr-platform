@@ -39,6 +39,9 @@ import ClientFormPage from '../pages/therapist/ClientformPage';
 import ClientDetailPage from '../pages/therapist/ClientDetailPage';
 import DashboardLayout from '../layouts/DashBoardLayout';
 import AcceptInvitation from '../pages/auth/AcceptInvitation';
+import Welcome from '../pages/auth/Welcome';
+import IntakeFlow from '../pages/client/IntakeFlow';
+import OnboardingSuccess from '../pages/client/OnboardingSuccess';
 const AppRouter: React.FC = () => {
   return (
     <Router>
@@ -53,6 +56,9 @@ const AppRouter: React.FC = () => {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password/:token" element={<ResetPassword />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
+              <Route path="/welcome" element={<Welcome />} />
+              <Route path="/intake" element={<IntakeFlow />} />
+              <Route path="/intake-success" element={<OnboardingSuccess />} />
               <Route
                 path="/accept-invite/:token"
                 element={<AcceptInvitation />}

@@ -31,6 +31,16 @@ enum AppointmentType {
   EMERGENCY
 }
 
+enum OnboardingStage {
+  INVITED
+  AUTHENTICATED
+  PERSONAL_INFO
+  INSURANCE
+  CONSENT
+  QUESTIONS
+  COMPLETE
+}
+
 model User {
   id                  String                @id @default(uuid())
   email               String                @unique
@@ -51,6 +61,9 @@ model User {
   twoFactorEnabled    Boolean               @default(false)
   twoFactorSecret     String?
   invitationTokens  InvitationToken[]
+  isRegistrationComplete Boolean @default(false)
+  authProvider       String?
+  authProviderId     String?
   
   // Relations
   passwordHistory     PasswordHistory[]
@@ -258,6 +271,7 @@ model ClientProfile {
   
   // Related appointments
   appointments      Appointment[]
+  onboardingStage   OnboardingStage @default(INVITED)
   
   @@index([therapistId])
 }
@@ -382,6 +396,8 @@ model InvitationToken {
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   usedAt      DateTime?
+  invitedEmail String?
+  inviteType  String?
   
   @@index([token])
   @@index([userId])
@@ -427,3 +443,20 @@ model InsuranceVerification {
   @@index([verifiedBy])
   @@index([createdAt])
 }
+
+model MagicCode {
+  id        String   @id @default(uuid())
+  code      String
+  email     String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
+  @@index([userId])
+}
+
+

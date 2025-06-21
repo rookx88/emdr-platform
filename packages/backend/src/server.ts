@@ -13,6 +13,8 @@ import therapistRoutes from './routes/therapistRoutes';
 import appointmentRoutes from './routes/appointmentRoutes';
 import phiRoutes from './routes/phiRoutes';
 import insuranceRoutes from './routes/insuranceRoutes';
+import onboardingRoutes from './routes/onboardingRoutes';
+
 
 // Security middleware
 import { securityHeadersMiddleware } from './middlewares/security/securityHeadersMiddleware';
@@ -74,6 +76,8 @@ app.use('/api/therapists', therapistRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/phi', phiRoutes);
 app.use('/api/insurance', insuranceRoutes);
+app.use('/api/onboarding', onboardingRoutes);
+
 
 // Health check endpoint
 app.get('/health', (req, res) => {
