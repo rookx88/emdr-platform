@@ -458,3 +458,5 @@ model MagicCode {
   @@index([expiresAt])
   @@index([userId])
 }
+
+
