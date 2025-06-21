@@ -15,6 +15,7 @@ import phiRoutes from './routes/phiRoutes';
 import insuranceRoutes from './routes/insuranceRoutes';
 import onboardingRoutes from './routes/onboardingRoutes';
 
+
 // Security middleware
 import { securityHeadersMiddleware } from './middlewares/security/securityHeadersMiddleware';
 import { phiDetectionMiddleware } from './middlewares/security/phiDetectionMiddleware';
@@ -76,6 +77,7 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/phi', phiRoutes);
 app.use('/api/insurance', insuranceRoutes);
 app.use('/api/onboarding', onboardingRoutes);
+
 
 // Health check endpoint
 app.get('/health', (req, res) => {
