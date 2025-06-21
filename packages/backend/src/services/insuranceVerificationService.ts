@@ -215,7 +215,7 @@ export const insuranceVerificationService = {
         preAuthRequired: result.preAuthRequired ?? null,
 
         rawResponse: result.raw as Prisma.InputJsonValue,
-        changes: result.changes as Prisma.InputJsonValue | null
+        changes: result.changes || undefined
 
       }
     });

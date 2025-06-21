@@ -12,7 +12,7 @@ export const onboardingController = {
       res.json({
         userId: invitation.userId,
         therapistName: therapist ? `${therapist.firstName ?? ''} ${therapist.lastName ?? ''}`.trim() : null,
-        therapistPhoto: invitation.user.clientProfile?.therapist?.user?.photoUrl ?? null
+        therapistPhoto: null
       });
     } catch (err) {
       next(err);

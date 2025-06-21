@@ -26,7 +26,7 @@ export const emailDraftService = {
         userId: 'me',
         requestBody: { message: { raw } }
       });
-      return { id: res.data.id };
+      return { id: res.data.id ?? undefined };
     }
 
     if (options.outlookToken) {
