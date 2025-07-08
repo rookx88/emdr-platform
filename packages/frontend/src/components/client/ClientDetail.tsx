@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import ScheduleSessionModal from '../therapist/ScheduleSessionModal';
+import { safeFormatDate, safeFormatTime } from '../../utils/date';
 
 interface Client {
   id: string;
@@ -61,7 +62,18 @@ const ClientDetail: React.FC = () => {
   // Format date for display
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString();
+    return safeFormatDate(dateString);
+  };
+
+  const formatDateTime = (dateString: string | null) => {
+    if (!dateString) return 'N/A';
+    return safeFormatDate(dateString, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
   
   // Get client's full name
@@ -242,13 +254,13 @@ const ClientDetail: React.FC = () => {
                       <div key={appointment.id} className="flex justify-between">
                         <div>
                           <div className="text-sm font-medium">{appointment.title}</div>
-                          <div className="text-xs text-gray-500">{formatDate(appointment.startTime)}</div>
+                          <div className="text-xs text-gray-500">{formatDateTime(appointment.startTime)}</div>
                         </div>
                         <Link
-                          to={`/therapist/appointments/${appointment.id}`}
+                          to={`/therapist/session/${appointment.id}`}
                           className="text-xs text-indigo-600 hover:text-indigo-800"
                         >
-                          View
+                          Join
                         </Link>
                       </div>
                     ))}
@@ -297,7 +309,7 @@ const ClientDetail: React.FC = () => {
                               {appointment.title || appointment.type}
                             </div>
                             <div className="mt-1 text-xs text-gray-500">
-                              {new Date(appointment.startTime).toLocaleString()}
+                              {formatDateTime(appointment.startTime)}
                             </div>
                           </div>
                           <div>

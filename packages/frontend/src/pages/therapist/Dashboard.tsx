@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import dashboardBackground from '../../assets/Dashboardbackdrop.svg';
+import { safeFormatDate, safeFormatTime } from '../../utils/date';
 
 
 const TherapistDashboard: React.FC = () => {
@@ -81,7 +82,7 @@ const TherapistDashboard: React.FC = () => {
         <h3 className="text-xl font-semibold mb-4">Session Preparation</h3>
         <div className="client-info mb-4">
           <h4 className="text-lg font-medium">Client: {nextSession.client?.user.firstName} {nextSession.client?.user.lastName}</h4>
-          <p className="text-gray-600">Last session: {new Date(nextSession.startTime).toLocaleDateString()}</p>
+          <p className="text-gray-600">Last session: {safeFormatDate(nextSession.startTime)}</p>
         </div>
         <div className="session-notes">
           <h4 className="text-md font-medium mb-2">Previous Session Notes:</h4>
@@ -95,10 +96,7 @@ const TherapistDashboard: React.FC = () => {
   };
   
   // Format time for display
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+  const formatTime = (dateString: string) => safeFormatTime(dateString);
   
   if (loading) {
     return (
@@ -144,7 +142,12 @@ const TherapistDashboard: React.FC = () => {
                 <p className="font-medium">{nextSession.client?.user.firstName} {nextSession.client?.user.lastName}</p>
                 <p className="text-gray-600">{formatTime(nextSession.startTime)}</p>
                 <p className="text-gray-600 text-sm mb-2">
-                  (in {Math.round((new Date(nextSession.startTime).getTime() - new Date().getTime()) / 60000)} minutes)
+                  {(() => {
+                    const start = new Date(nextSession.startTime);
+                    if (isNaN(start.getTime())) return 'Date TBD';
+                    const diff = Math.round((start.getTime() - Date.now()) / 60000);
+                    return `(in ${diff} minutes)`;
+                  })()}
                 </p>
                 <div className="flex mt-2 space-x-2">
                   <Link
