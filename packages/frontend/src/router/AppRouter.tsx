@@ -85,6 +85,15 @@ const AppRouter: React.FC = () => {
                   </ProtectedRoute>
                 }
               />
+              {/* Client view of a therapy session */}
+              <Route
+                path="/client/session/:sessionId"
+                element={
+                  <ProtectedRoute allowedRoles={[Role.CLIENT, Role.ADMIN]} noLayout={true}>
+                    <SessionPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/therapist/calendar"
                 element={

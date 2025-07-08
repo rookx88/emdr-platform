@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import { safeFormatDate, safeFormatTime } from '../../utils/date';
 
 const ClientDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -58,22 +59,11 @@ const ClientDashboard: React.FC = () => {
     }
   };
   
-  // Helper to format date
-  const formatDate = (date: Date | string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-  
-  // Helper to format time
-  const formatTime = (date: Date | string) => {
-    return new Date(date).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  // Helper to format date safely
+  const formatDate = (date: Date | string) => safeFormatDate(date);
+
+  // Helper to format time safely
+  const formatTime = (date: Date | string) => safeFormatTime(date);
   
   if (loading) {
     return (
