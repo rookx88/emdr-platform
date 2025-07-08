@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import { safeFormatDate } from '../../utils/date';
 
 const ProfilePage: React.FC = () => {
   const { user } = useAuth();
@@ -30,10 +31,10 @@ const ProfilePage: React.FC = () => {
     }
   };
   
-  // Format date for display
+  // Format date for display with validation
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Not provided';
-    return new Date(dateString).toLocaleDateString();
+    return safeFormatDate(dateString, { month: 'long', day: 'numeric', year: 'numeric' });
   };
   
   if (loading) {
