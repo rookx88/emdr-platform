@@ -1,4 +1,3 @@
-// packages/backend/src/server.ts
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -15,24 +14,21 @@ import phiRoutes from './routes/phiRoutes';
 import insuranceRoutes from './routes/insuranceRoutes';
 import onboardingRoutes from './routes/onboardingRoutes';
 
-
-// Security middleware
 import { securityHeadersMiddleware } from './middlewares/security/securityHeadersMiddleware';
 import { phiDetectionMiddleware } from './middlewares/security/phiDetectionMiddleware';
 import { phiResponseMiddleware } from './middlewares/security/phiResponseMiddleware';
 
-// Load environment variables
-dotenv.config({ 
-  path: process.env.NODE_ENV === 'production' 
-    ? '.env.production' 
-    : '.env.development' 
+dotenv.config({
+  path: process.env.NODE_ENV === 'production'
+    ? '.env.production'
+    : '.env.development'
 });
 
 const app = express();
 const PORT = process.env.API_PORT || 4000;
 
-// Security middleware
-app.use(helmet()); // Set security headers
+// security middleware
+app.use(helmet());
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -40,20 +36,14 @@ app.use(cors({
   credentials: true,
 }));
 
-// Apply security headers middleware
 app.use(securityHeadersMiddleware);
-
-// Increase payload size limit for audio data
-app.use(express.json({ limit: '10mb' })); // Increased from 1mb to 10mb
-
-// Apply PHI detection middleware for request processing
+app.use(express.json({ limit: '10mb' }));
 app.use(phiDetectionMiddleware);
 
-// Rate limiting for security
 if (process.env.ENABLE_RATE_LIMITING === 'true') {
   app.use(rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     standardHeaders: true,
     legacyHeaders: false,
   }));
@@ -64,10 +54,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Apply PHI response middleware for all routes
 app.use(phiResponseMiddleware());
 
-// Routes
+// routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/sessions', sessionRoutes);
@@ -78,8 +67,7 @@ app.use('/api/phi', phiRoutes);
 app.use('/api/insurance', insuranceRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 
-
-// Health check endpoint
+// health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'healthy' });
 });
@@ -89,7 +77,7 @@ app.use((req, res, next) => {
   res.status(404).json({ message: 'Endpoint not found' });
 });
 
-// Error handling middleware
+// error handling
 app.use(errorHandler);
 
 app.listen(PORT, () => {
